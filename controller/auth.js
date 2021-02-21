@@ -8,9 +8,9 @@ const mailgun = require('nodemailer-mailgun-transport')
 
 // TODO: Send email when user registers
 // TODO: Confirm email and proceed to account activation
-// TODO: Apply reCAPTCHA if customer is interested
 // TODO: Admin login functionality
 
+// FIXME: Apply reCAPTCHA if customer is interested
 exports.register = async (req, res) => {
   const postExample = {
     "username": "gustavo",
@@ -30,7 +30,7 @@ exports.register = async (req, res) => {
 
     // Generate token for new user
     
-    const token = jwt.sign({username, email, password, firstName, lastName, role}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '15min'})
+    const token = jwt.sign({username, email, password, firstName, lastName, role}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '1hr'})
 
     // Send email with token url parameters for email confirmation and account activation
 
@@ -88,22 +88,37 @@ exports.activate = (req, res) => {
 
         if(result){
           const token = jwt.sign({_id: result._id}, process.env.JWT_SECRET, {expiresIn: '10min', algorithm: 'HS256'})
-          const {_id, username, email, role} = result
-          const userClient = {_id, username, email, role}
+          const {_id, username, firstName, email, role} = result
+          const userClient = {_id, username, firstName, email, role}
           return res.status(202).cookie(
               "accessToken", token, {
               sameSite: 'strict',
-              expires: new Date(new Date().getTime() + (15 * 60 * 1000)),
+              expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
               httpOnly: true
           })
           .cookie("user", JSON.stringify(userClient), {
             sameSite: 'strict',
-            expires: new Date(new Date().getTime() + (15 * 60 * 1000)),
+            expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
             httpOnly: true
           })
           .send('User is registered')
         }
       })
     })
+  })
+}
+
+exports.requiresLogin = expressJWT({ secret: process.env.JWT_SECRET, algorithms: ['HS256']})
+
+exports.adminAuth = (req, res, next) => {
+  console.log(req.user)
+  const authUserId = req.user._id
+  User.findOne({_id: authUserId}, (err, user) => {
+      if(err || !user) return res.status(401).json('User not found')
+
+      if(user.role !== 'admin') return res.status(401).json('Admin personnel only. Access denied')
+      
+      req.profile = user
+      next()
   })
 }
