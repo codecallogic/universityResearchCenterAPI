@@ -17,3 +17,13 @@ exports.registerUserValidator = [
     return false
   })
 ]
+
+exports.adminLoginValidator = [
+  check('loginCred', 'Not a valid username or email, please try again').custom( value => {
+    let regex = /^[^s@]+@[^/s@.]+\.[^\s@]+$|^\w{3,}$/g
+    if(regex.test(value)){
+      return true
+    }
+    return false
+  })
+]
