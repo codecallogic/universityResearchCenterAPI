@@ -130,7 +130,7 @@ exports.adminLogin = (req, res) => {
           if(user.role === 'admin'){
           user.comparePassword(password, (err, isMatch) => {
             if(isMatch){
-              const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '1hr', algorithm: 'HS256'})
+              const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
               const {_id, username, email, role} = user
               const userClient = {_id, username, email, role}
               return res.status(202).cookie(
