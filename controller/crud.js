@@ -1,3 +1,4 @@
+const e = require('express')
 const Announcement = require('../models/announcement')
 
 exports.createAnnouncement = (req, res) => {
@@ -16,8 +17,13 @@ exports.createAnnouncement = (req, res) => {
 }
 
 exports.list = (req, res) => {
-  Announcement.find({}, (err, all) => {
+  Announcement.find({}, (err, results) => {
     if(err) return res.status(401).json('Could not get announcements')
-    res.json(all)
+    res.json(results)
   })
+}
+
+exports.updateAnnouncement = (req, res) => {
+  console.log(req.body)
+  // Announcement.updateOne({})
 }
