@@ -157,3 +157,9 @@ exports.adminLogin = (req, res) => {
         }
   })
 }
+
+exports.adminLogout = (req, res) => {
+  res.clearCookie('user')
+  res.clearCookie('accessToken')
+  return res.json('Logged out');
+}
