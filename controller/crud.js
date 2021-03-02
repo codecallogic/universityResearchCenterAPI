@@ -16,7 +16,7 @@ exports.createAnnouncement = (req, res) => {
   })
 }
 
-exports.list = (req, res) => {
+exports.listAnnouncements = (req, res) => {
   Announcement.find({}, (err, results) => {
     if(err) return res.status(401).json('Could not get announcements')
     res.json(results)
@@ -38,5 +38,12 @@ exports.updateAnnouncement = (req, res) => {
       if(err) return res.status(401).json('Could not get announcements')
       res.json(results)
     })
+  })
+}
+
+exports.listAnnouncementsPublic = (req, res) => {
+  Announcement.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get announcements')
+    res.json(results)
   })
 }
