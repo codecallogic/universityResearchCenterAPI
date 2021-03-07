@@ -21,6 +21,15 @@ const announcementSchema = new Schema(
   message: {
     type: String,
     required: true,
+  },
+  enabled: {
+    type: Boolean,
+    default: true,
+    required: true
+  },
+  primary: {
+    type: Boolean,
+    default: false
   }
 },
 {
