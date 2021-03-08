@@ -1,8 +1,9 @@
-const e = require('express')
 const Announcement = require('../models/announcement')
+const Meeting = require('../models/meetings')
 
+// ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
-  const {title, subtitle, imageURL, imageDescr, primary, message} = req.body.announcement
+  const {title, subtitle, imageURL, imageDescr, primary, message} = req.body.content
 
   if(primary === true){
     Announcement.find({primary: true}, (err, pri) => {
@@ -21,7 +22,7 @@ exports.createAnnouncement = (req, res) => {
   }
   
   Announcement.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, announcement) => {
-    if(err) return res.status(401).json('You cannot have duplicate announcements with same title or subtitle')
+    if(announcement) return res.status(401).json('You cannot have duplicate announcements with same title or subtitle')
 
     const newAnnouncement = new Announcement({title, subtitle, imageURL, imageDescr, primary, message})
 
@@ -91,5 +92,54 @@ exports.listAnnouncementsPublic = (req, res) => {
   Announcement.find({}, (err, results) => {
     if(err) return res.status(401).json('Could not get announcements')
     res.json(results)
+  })
+}
+
+// MEETINGS
+exports.createMeeting = (req, res) => {
+  const {title, subtitle, expiration, source, message} = req.body.content
+  
+  Meeting.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, meeting) => {
+    if(meeting) return res.status(401).json('You cannot have duplicate meetings with same title or subtitle')
+
+    const newMeeting = new Meeting({title, subtitle, source, expiration, message})
+
+    newMeeting.save( (err, results) => {
+      if(err) return res.status(401).json(`Sorry we're having trouble posting the meeting`)
+      res.json('Meeting or activity has been posted')
+    })
+  })
+}
+
+exports.listMeetings = (req, res) => {
+  Meeting.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get meetings and activities')
+    res.json(results)
+  })
+}
+
+exports.updateMeeting = (req, res) => {
+  const {id, title, subtitle, source, expiration, enabled, message} = req.body
+  
+  Meeting.findByIdAndUpdate(id, {$set: {
+    'title': title,
+    'subtitle': subtitle,
+    'source': source,
+    'expiration': expiration,
+    'enabled': enabled,
+    'message': message
+  }}, (err, results) => {
+    if(err) return res.status(400).json('Could not update meeting')
+    Meeting.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get meetings and activities')
+
+      let newResultsExpirationDates = results.map( item => {
+        item.expiration.toISOString().slice(0,10)
+        console.log(item)
+        return item
+      })
+
+      res.json(results)
+    })
   })
 }

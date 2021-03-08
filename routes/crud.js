@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const {createAnnouncement, listAnnouncements, updateAnnouncement, deleteAnnouncement, listAnnouncementsPublic} = require('../controller/crud')
+const {createAnnouncement, listAnnouncements, updateAnnouncement, deleteAnnouncement, listAnnouncementsPublic, createMeeting, listMeetings, updateMeeting} = require('../controller/crud')
 
 // Middleware
 const {requiresLogin, adminAuth} = require('../controller/auth')
@@ -11,5 +11,8 @@ router.get('/announcement/list', requiresLogin, adminAuth, listAnnouncements)
 router.post('/announcement/update', requiresLogin, adminAuth, updateAnnouncement)
 router.post('/announcement/delete', requiresLogin, adminAuth, deleteAnnouncement)
 router.get('/announcement/public/list', listAnnouncementsPublic)
+router.post('/meeting/create', requiresLogin, adminAuth, createMeeting)
+router.get('/meetings/list', requiresLogin, adminAuth, listMeetings)
+router.post('/meeting/update', requiresLogin, adminAuth, updateMeeting)
 
 module.exports  = router
