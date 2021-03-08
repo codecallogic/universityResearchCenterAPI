@@ -79,10 +79,8 @@ exports.updateAnnouncement = (req, res) => {
 exports.deleteAnnouncement = (req, res) => {
   Announcement.findByIdAndDelete(req.body[0], (err, response) => {
     if(err) res.status(400).json('Error deleting the announcement')
-    console.log(response)
     Announcement.find({}, (err, results) => {
       if(err) return res.status(401).json('Could not get announcements')
-      console.log(results)
       res.json(results)
     })
   })
@@ -98,7 +96,9 @@ exports.listAnnouncementsPublic = (req, res) => {
 // MEETINGS
 exports.createMeeting = (req, res) => {
   const {title, subtitle, expiration, source, message} = req.body.content
-  
+
+  console.log({'Hello': expiration})
+
   Meeting.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, meeting) => {
     if(meeting) return res.status(401).json('You cannot have duplicate meetings with same title or subtitle')
 
@@ -132,14 +132,24 @@ exports.updateMeeting = (req, res) => {
     if(err) return res.status(400).json('Could not update meeting')
     Meeting.find({}, (err, results) => {
       if(err) return res.status(401).json('Could not get meetings and activities')
-
-      let newResultsExpirationDates = results.map( item => {
-        item.expiration.toISOString().slice(0,10)
-        console.log(item)
-        return item
-      })
-
       res.json(results)
     })
+  })
+}
+
+exports.deleteMeeting = (req, res) => {
+  Meeting.findByIdAndDelete(req.body[0], (err, response) => {
+    if(err) res.status(400).json('Error deleting the meeting')
+    Meeting.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get meetings and activities')
+      res.json(results)
+    })
+  })
+}
+
+exports.listMeetingsPublic = (req, res) => {
+  Meeting.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get announcements')
+    res.json(results)
   })
 }

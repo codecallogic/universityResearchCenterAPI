@@ -16,7 +16,7 @@ const meetingSchema = new Schema(
   },
   expiration: {
     type: Date,
-    required: true,
+    default: ''
   },
   enabled: {
     type: Boolean,
