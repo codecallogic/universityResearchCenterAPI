@@ -1,5 +1,6 @@
 const Announcement = require('../models/announcement')
 const Meeting = require('../models/meetings')
+const Opportunity = require('../models/opportunities')
 
 // ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
@@ -149,7 +150,66 @@ exports.deleteMeeting = (req, res) => {
 
 exports.listMeetingsPublic = (req, res) => {
   Meeting.find({}, (err, results) => {
-    if(err) return res.status(401).json('Could not get announcements')
+    if(err) return res.status(401).json('Could not get meetings and activities')
+    res.json(results)
+  })
+}
+
+// OPPORTUNITIES
+exports.createOpportunity = (req, res) => {
+  const {title, subtitle, expiration, source, message} = req.body.content
+
+  Opportunity.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, meeting) => {
+    if(meeting) return res.status(401).json('You cannot have duplicate opportunities with same title or subtitle')
+
+    const newOpportunity = new Opportunity({title, subtitle, source, expiration, message})
+
+    newOpportunity.save( (err, results) => {
+      if(err) return res.status(401).json(`Sorry we're having trouble posting the opportunity`)
+      res.json('Opportunity has been posted')
+    })
+  })
+}
+
+exports.listOpportunities = (req, res) => {
+  Opportunity.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get opportunities for faculty')
+    res.json(results)
+  })
+}
+
+exports.updateOpportunity = (req, res) => {
+  const {id, title, subtitle, source, expiration, enabled, message} = req.body
+  
+  Opportunity.findByIdAndUpdate(id, {$set: {
+    'title': title,
+    'subtitle': subtitle,
+    'source': source,
+    'expiration': expiration,
+    'enabled': enabled,
+    'message': message
+  }}, (err, results) => {
+    if(err) return res.status(400).json('Could not update opportunity')
+    Opportunity.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get opportunities for faculty')
+      res.json(results)
+    })
+  })
+}
+
+exports.deleteOpportunity = (req, res) => {
+  Opportunity.findByIdAndDelete(req.body[0], (err, response) => {
+    if(err) res.status(400).json('Error deleting the meeting')
+    Opportunity.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get opportunities for faculty')
+      res.json(results)
+    })
+  })
+}
+
+exports.listOpportunitiesPublic = (req, res) => {
+  Opportunity.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get opportunities for faculty')
     res.json(results)
   })
 }
