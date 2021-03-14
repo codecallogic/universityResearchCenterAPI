@@ -121,39 +121,36 @@ exports.adminAuth = (req, res, next) => {
   })
 }
 
+// FIXME: Removed Admin access code from login authentication
 exports.adminLogin = (req, res) => {
   const {loginCred, password, code} = req.body
 
   User.findOne({$or: [{email: loginCred}, {username: loginCred}]}, (err, user) => {
       if(err || !user) return res.status(401).json('Username does not exist, please register first')
-        if(code === process.env.ADMIN_LOGIN_REGISTRATION_CODE){
-          if(user.role === 'admin'){
-          user.comparePassword(password, (err, isMatch) => {
-            if(isMatch){
-              const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
-              const {_id, username, email, role} = user
-              const userClient = {_id, username, email, role}
-              return res.status(202).cookie(
-                  "accessToken", token, {
-                  sameSite: 'strict',
-                  expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
-                  httpOnly: true
-              })
-              .cookie("user", JSON.stringify(userClient), {
+        if(user.role === 'admin'){
+        user.comparePassword(password, (err, isMatch) => {
+          if(isMatch){
+            const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
+            const {_id, username, email, role} = user
+            const userClient = {_id, username, email, role}
+            return res.status(202).cookie(
+                "accessToken", token, {
                 sameSite: 'strict',
                 expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
                 httpOnly: true
-              })
-              .send('User is logged in')
-            }else{
-              return res.status(401).json('Email and password do not match')
-            }
-          })
+            })
+            .cookie("user", JSON.stringify(userClient), {
+              sameSite: 'strict',
+              expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
+              httpOnly: true
+            })
+            .send('User is logged in')
           }else{
-            return res.status(401).json('Authorized personnel only')
+            return res.status(401).json('Email and password do not match')
           }
+        })
         }else{
-          return res.status(401).json('Admin code does not match')
+          return res.status(401).json('Authorized personnel only')
         }
   })
 }
