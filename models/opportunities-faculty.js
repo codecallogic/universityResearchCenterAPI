@@ -32,4 +32,4 @@ const opportunitySchema = new Schema(
     timestamps: true
 })
 
-module.exports = mongoose.model('Opportunities', opportunitySchema)
+module.exports = mongoose.model('Opportunities-Faculty', opportunitySchema)
