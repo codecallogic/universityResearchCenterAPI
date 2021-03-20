@@ -2,6 +2,8 @@ const Announcement = require('../models/announcement')
 const Meeting = require('../models/meetings')
 const OpportunityForFaculty = require('../models/opportunities-faculty')
 const OpportunityForStudents = require('../models/opportunities-students')
+const HeaderComponent = require('../models/header')
+const {groupingHeaderData} = require('../helpers/grouping')
 
 // ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
@@ -271,6 +273,63 @@ exports.deleteStudentOpportunity = (req, res) => {
 
 exports.listStudentOpportunitiesPublic = (req, res) => {
   OpportunityForStudents.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get opportunities for faculty')
+    res.json(results)
+  })
+}
+
+// Header Component
+exports.createHeader = (req, res) => {
+  const newHeaderComponent = new HeaderComponent(req.body.header)
+
+  newHeaderComponent.save( (err, results) => {
+    console.log(err)
+    if(err) return res.status(401).json(`Sorry we're having trouble creating the header slide`)
+    return res.json('Header slider was created')
+  })
+    
+}
+
+exports.headerList = (req, res) => {
+  HeaderComponent.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get header component data')
+    res.json(results)
+  })
+}
+
+exports.updateHeader = (req, res) => {
+  const {id, enabled, headline, subheading, button, imageLeftColumn, imageRightColumn, captionOne, captionTwo} = req.body
+
+  HeaderComponent.findByIdAndUpdate(id, {$set: {
+    'enabled': enabled,
+    'headline': headline,
+    'subheading': subheading,
+    'button': button,
+    'imageLeftColumn': imageLeftColumn,
+    'imageRightColumn': imageRightColumn,
+    'captionOne': captionOne,
+    'captionTwo': captionTwo
+  }}, (err, results) => {
+    if(err) return res.status(400).json('Could not update header')
+    HeaderComponent.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get header for faculty')
+      res.json(results)
+    })
+  })
+}
+
+exports.deleteHeader = (req, res) => {
+  HeaderComponent.findByIdAndDelete(req.body[0], (err, response) => {
+    if(err) res.status(400).json('Error deleting the header')
+    HeaderComponent.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get header data')
+      res.json(results)
+    })
+  })
+}
+
+exports.headerComponentPublic = (req, res) => {
+  HeaderComponent.find({}, (err, results) => {
     if(err) return res.status(401).json('Could not get opportunities for faculty')
     res.json(results)
   })
