@@ -375,3 +375,19 @@ exports.studentList = (req, res) => {
     res.json(results)
   })
 }
+
+exports.studentProfilesPublic = (req, res) => {
+  StudentProfile.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get student data')
+    res.json(results)
+  })
+}
+
+exports.getStudentProfile = (req, res) => {
+  const {id} = req.params
+
+  StudentProfile.findOne({_id: id}, (err, results) => {
+    if(err) return res.status(401).json('Could not get student profile')
+    return res.json(results)
+  })
+}
