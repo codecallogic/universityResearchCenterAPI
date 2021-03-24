@@ -359,6 +359,16 @@ exports.updateStudentProfile = (req, res) => {
   })
 }
 
+exports.deleteStudentProfile = (req, res) => {
+  StudentProfile.findByIdAndDelete(req.body[0], (err, response) => {
+    if(err) res.status(400).json('Error deleting the student profile')
+    StudentProfile.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get student profiles')
+      res.json(results)
+    })
+  })
+}
+
 exports.studentList = (req, res) => {
   StudentProfile.find({}, (err, results) => {
     if(err) return res.status(401).json('Could not get student data')

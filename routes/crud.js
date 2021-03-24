@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const {createAnnouncement, listAnnouncements, updateAnnouncement, deleteAnnouncement, listAnnouncementsPublic, createMeeting, listMeetings, updateMeeting, deleteMeeting, listMeetingsPublic, createFacultyOpportunity, listFacultyOpportunities, updateFacultyOpportunity, deleteFacultyOpportunity, listFacultyOpportunitiesPublic, createStudentOpportunity, listStudentOpportunities, updateStudentOpportunity, deleteStudentOpportunity, listStudentOpportunitiesPublic, createHeader, updateHeader, deleteHeader, headerList, headerComponentPublic, createStudentProfile, updateStudentProfile, studentList} = require('../controller/crud')
+const {createAnnouncement, listAnnouncements, updateAnnouncement, deleteAnnouncement, listAnnouncementsPublic, createMeeting, listMeetings, updateMeeting, deleteMeeting, listMeetingsPublic, createFacultyOpportunity, listFacultyOpportunities, updateFacultyOpportunity, deleteFacultyOpportunity, listFacultyOpportunitiesPublic, createStudentOpportunity, listStudentOpportunities, updateStudentOpportunity, deleteStudentOpportunity, listStudentOpportunitiesPublic, createHeader, updateHeader, deleteHeader, headerList, headerComponentPublic, createStudentProfile, updateStudentProfile, deleteStudentProfile, studentList} = require('../controller/crud')
 
 // Middleware
 const {requiresLogin, adminAuth} = require('../controller/auth')
@@ -33,6 +33,7 @@ router.get('/header-component/list', requiresLogin, adminAuth, headerList)
 router.get('/header-component/public', headerComponentPublic)
 router.post('/student-profile/create', requiresLogin, adminAuth, createStudentProfile)
 router.post('/student-profile/update', requiresLogin, adminAuth, updateStudentProfile)
+router.post('/student-profile/delete', requiresLogin, adminAuth, deleteStudentProfile)
 router.get('/student-profile/list', requiresLogin, adminAuth, studentList)
 
 module.exports  = router
