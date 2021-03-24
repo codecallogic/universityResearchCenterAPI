@@ -39,4 +39,4 @@ const Header = new Schema(
     timestamps: true
 })
 
-module.exports = mongoose.model('headerComponent', Header)
+module.exports = mongoose.model('Header-Component', Header)

@@ -109,7 +109,6 @@ exports.activate = (req, res) => {
 exports.requiresLogin = expressJWT({ secret: process.env.JWT_SECRET, algorithms: ['HS256']})
 
 exports.adminAuth = (req, res, next) => {
-  console.log(req.user)
   const authUserId = req.user._id
   User.findOne({_id: authUserId}, (err, user) => {
       if(err || !user) return res.status(401).json('User not found')
@@ -124,10 +123,10 @@ exports.adminAuth = (req, res, next) => {
 // FIXME: Removed Admin access code from login authentication
 exports.adminLogin = (req, res) => {
   const {loginCred, password, code} = req.body
-
   User.findOne({$or: [{email: loginCred}, {username: loginCred}]}, (err, user) => {
       if(err || !user) return res.status(401).json('Username does not exist, please register first')
         if(user.role === 'admin'){
+          console.log(user)
         user.comparePassword(password, (err, isMatch) => {
           if(isMatch){
             const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
@@ -137,12 +136,16 @@ exports.adminLogin = (req, res) => {
                 "accessToken", token, {
                 sameSite: 'strict',
                 expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
-                httpOnly: true
+                httpOnly: true,
+                secure: false,
+                overwrite: true
             })
             .cookie("user", JSON.stringify(userClient), {
               sameSite: 'strict',
               expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
-              httpOnly: true
+              httpOnly: true,
+              secure: false,
+              overwrite: true
             })
             .send('User is logged in')
           }else{

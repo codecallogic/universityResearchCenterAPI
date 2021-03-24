@@ -3,7 +3,7 @@ const Meeting = require('../models/meetings')
 const OpportunityForFaculty = require('../models/opportunities-faculty')
 const OpportunityForStudents = require('../models/opportunities-students')
 const HeaderComponent = require('../models/header')
-const {groupingHeaderData} = require('../helpers/grouping')
+const StudentProfile = require('../models/student-profile')
 
 // ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
@@ -278,7 +278,7 @@ exports.listStudentOpportunitiesPublic = (req, res) => {
   })
 }
 
-// Header Component
+// HEADER COMPONENT
 exports.createHeader = (req, res) => {
   const newHeaderComponent = new HeaderComponent(req.body.header)
 
@@ -331,6 +331,37 @@ exports.deleteHeader = (req, res) => {
 exports.headerComponentPublic = (req, res) => {
   HeaderComponent.find({}, (err, results) => {
     if(err) return res.status(401).json('Could not get opportunities for faculty')
+    res.json(results)
+  })
+}
+
+// STUDENT PROFILES
+exports.createStudentProfile = (req, res) => {
+  StudentProfile.findOne({$or: [{linkedIn: req.body.student.linkedIn}, {email: req.body.student.email}]}, (err, student) => {
+    if(student) return res.status(401).json('You cannot have accounts with duplicate LinkedIn or email for student profile')
+
+    const newStudent = new StudentProfile(req.body.student)
+
+    newStudent.save( (err, results) => {
+      if(err) return res.status(401).json(`Sorry we're having trouble creating the student`)
+      res.json('Student profile was created successfully')
+    })
+  })
+}
+
+exports.updateStudentProfile = (req, res) => {
+  StudentProfile.findByIdAndUpdate(req.body._id, req.body, (err, results) => {
+    if(err) return res.status(400).json('Could not update header')
+    StudentProfile.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get header for faculty')
+      res.json(results)
+    })
+  })
+}
+
+exports.studentList = (req, res) => {
+  StudentProfile.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get student data')
     res.json(results)
   })
 }

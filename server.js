@@ -20,12 +20,18 @@ app.use(cors({credentials: true, origin: process.env.CLIENT_URL}))
 // API
 app.use('/api', authRoutes)
 app.use('/api', userRoutes, (err, req, res, next) => {
-  console.log(err)
   if (err.name === 'UnauthorizedError') {
-    res.status(401).send('You must login first.');
+    // res.clearCookie('user', { expires: new Date(0), path:'/admin/login'})
+    // res.clearCookie('accessToken', { expires: new Date(0) })
+    res.status(401).json('Please refresh the page, and login first.');
   }
  })
- app.use('/api', crudRoutes)
+ app.use('/api', crudRoutes, (err, req, res, next) => {
+  if (err.name === 'UnauthorizedError') {
+    console.log(err)
+    res.status(401).json('Please refresh the page, and login first.');
+  }
+ })
 
 const port = process.env.PORT || 3001
 
