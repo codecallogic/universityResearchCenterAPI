@@ -298,13 +298,14 @@ exports.headerList = (req, res) => {
 }
 
 exports.updateHeader = (req, res) => {
-  const {id, enabled, headline, subheading, button, imageLeftColumn, imageRightColumn, captionOne, captionTwo} = req.body
+  const {id, enabled, headline, subheading, button, buttonLink, imageLeftColumn, imageRightColumn, captionOne, captionTwo} = req.body
 
   HeaderComponent.findByIdAndUpdate(id, {$set: {
     'enabled': enabled,
     'headline': headline,
     'subheading': subheading,
     'button': button,
+    'buttonLink': buttonLink,
     'imageLeftColumn': imageLeftColumn,
     'imageRightColumn': imageRightColumn,
     'captionOne': captionOne,

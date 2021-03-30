@@ -15,6 +15,10 @@ const Header = new Schema(
     type: String,
     required: true,
   },
+  buttonLink: {
+    type: String,
+    required: true,
+  },
   imageLeftColumn: {
     type: String,
     required: true,
