@@ -19,10 +19,9 @@ const studentProfileSchema = new Schema(
     type: String,
     required: true
   },
-  researchInterests: {
-    type: Array,
-    required: true
-  },
+  researchInterests: [{
+    type: Schema.Types.ObjectId, ref: 'Tags'
+  }],
   institution: {
     type: String,
     required: true

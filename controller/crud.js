@@ -4,6 +4,7 @@ const OpportunityForFaculty = require('../models/opportunities-faculty')
 const OpportunityForStudents = require('../models/opportunities-students')
 const HeaderComponent = require('../models/header')
 const StudentProfile = require('../models/student-profile')
+const Tags = require('../models/tags')
 
 // ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
@@ -338,6 +339,9 @@ exports.headerComponentPublic = (req, res) => {
 
 // STUDENT PROFILES
 exports.createStudentProfile = (req, res) => {
+
+  delete req.body['researchInterests']
+  
   StudentProfile.findOne({$or: [{linkedIn: req.body.student.linkedIn}, {email: req.body.student.email}]}, (err, student) => {
     if(student) return res.status(401).json('You cannot have accounts with duplicate LinkedIn or email for student profile')
 
@@ -350,13 +354,69 @@ exports.createStudentProfile = (req, res) => {
   })
 }
 
-exports.updateStudentProfile = (req, res) => {
-  StudentProfile.findByIdAndUpdate(req.body._id, req.body, (err, results) => {
-    if(err) return res.status(400).json('Could not update header')
-    StudentProfile.find({}, (err, results) => {
-      if(err) return res.status(401).json('Could not get header for faculty')
-      res.json(results)
+exports.updateStudentProfile = async (req, res) => {
+  const tags = req.body['researchInterests']
+  delete req.body['researchInterests']
+
+  let found = await Tags.find({tag: tags}, (err, item) => {}).exec()
+
+  // TO CHECK IF TAGS EXISTS IN STUDENT PROFILE REFERENCE USE THESE STRINGS TO CHECK DATA
+  let holdFound = [...found]
+  holdFound = holdFound.map( (item) => {
+    return item._id
+  })
+
+  if(found.length > 0){
+    found.forEach( (item) => {
+      tags.splice(tags.indexOf(found.tag), 1)
     })
+  }
+
+  let json = tags.map( (i) => {
+    return {"tag": i}
+  })
+  
+  Tags.create(json, (err, item) => {
+    
+    console.log(err)
+    if(err) return res.status(400).json('There was an error saving a tag')
+
+    StudentProfile.findByIdAndUpdate(req.body._id, req.body, (err, updatedStudent) => {
+      console.log(err)
+      if(err) return res.status(400).json('Could not update student')
+
+      StudentProfile.findById(req.body._id).populate('researchInterests').exec( (err, student) => {
+        console.log(err)
+        if(err) return res.status(401).json('Could not find student')
+        if(item){
+          item.forEach( (i) => {
+            student.researchInterests.push(i._id)
+          })
+        }else{
+          student.researchInterests.forEach( (item) => {
+            const found = holdFound.find( value => value.toString() == item._id)
+            student.researchInterests.push(found)
+          })
+        }
+
+        student.save( (err) => {
+          console.log(err)
+          if(err) return res.status(401).json('Could not save tags to student model')
+          StudentProfile.findById(req.body._id).populate('researchInterests').exec(function(err, doc) {
+            console.log(err)
+            if(err) return res.status(401).json('Could not get students')
+            res.json(doc)
+          })
+        })
+      })
+    })
+  })
+}
+
+exports.findProfile = (req, res) => {
+  StudentProfile.findById(req.body.id).populate('researchInterests').exec(function(err, doc) {
+    if(err) return res.status(401).json('Could not get student profile')
+    res.json(doc)
   })
 }
 
