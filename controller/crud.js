@@ -355,7 +355,8 @@ exports.createStudentProfile = (req, res) => {
 }
 
 exports.updateStudentProfile = async (req, res) => {
-  const tags = req.body['researchInterests']
+  let tags = req.body['researchInterests']
+  let tagsToRemove = req.body['tagsToRemove']
   delete req.body['researchInterests']
 
   let found = await Tags.find({tag: tags}, (err, item) => {}).exec()
@@ -368,7 +369,7 @@ exports.updateStudentProfile = async (req, res) => {
 
   if(found.length > 0){
     found.forEach( (item) => {
-      tags.splice(tags.indexOf(found.tag), 1)
+      tags = tags.filter( (i) => {return i !== item.tag})
     })
   }
 
@@ -378,32 +379,66 @@ exports.updateStudentProfile = async (req, res) => {
   
   Tags.create(json, (err, item) => {
     
-    console.log(err)
+    // console.log(err)
     if(err) return res.status(400).json('There was an error saving a tag')
 
     StudentProfile.findByIdAndUpdate(req.body._id, req.body, (err, updatedStudent) => {
-      console.log(err)
+      // console.log(err)
       if(err) return res.status(400).json('Could not update student')
 
       StudentProfile.findById(req.body._id).populate('researchInterests').exec( (err, student) => {
-        console.log(err)
+        // console.log(err)
         if(err) return res.status(401).json('Could not find student')
+        
         if(item){
+          // ADD TAGS THAT WERE JUST CREATED
+
           item.forEach( (i) => {
             student.researchInterests.push(i._id)
           })
         }else{
-          student.researchInterests.forEach( (item) => {
-            const found = holdFound.find( value => value.toString() == item._id)
-            student.researchInterests.push(found)
+           // ADD TAGS THAT ARE NOT IN STUDENT PROFILE BUT EXIST IN TAG DATA MODEL
+          
+          let tagsInProfile = []
+          if(student.researchInterests){
+            tagsInProfile = student.researchInterests.map( (tag) => {
+              return tag._id
+            })
+          }          
+          
+          holdFound.forEach( (item) => {
+            let found
+            if(tagsInProfile){
+              found = tagsInProfile.find( value => value.toString() == item)
+            }
+
+            found ? null : (student.researchInterests.push(item))
           })
         }
 
+        if(tagsToRemove){
+          // REMOVE TAGS FROM STUDENT PROFILE
+          let newArray = student.researchInterests.filter( (item) => {
+            if(item.tag){
+              if(tagsToRemove.indexOf(item.tag.toString()) == -1) return item
+            }else{
+              return item
+            }
+          })
+
+          let ids = []
+          if(newArray){
+            ids = newArray.filter( (item) => item)
+          }
+
+          student.researchInterests = ids
+        }
+
         student.save( (err) => {
-          console.log(err)
+          // console.log(err)
           if(err) return res.status(401).json('Could not save tags to student model')
           StudentProfile.findById(req.body._id).populate('researchInterests').exec(function(err, doc) {
-            console.log(err)
+            // console.log(err)
             if(err) return res.status(401).json('Could not get students')
             res.json(doc)
           })
