@@ -482,8 +482,15 @@ exports.studentProfilesPublic = (req, res) => {
 exports.getStudentProfile = (req, res) => {
   const {id} = req.params
 
-  StudentProfile.findOne({_id: id}, (err, results) => {
+  StudentProfile.findById(id).populate('researchInterests').exec(function(err, doc) {
     if(err) return res.status(401).json('Could not get student profile')
-    return res.json(results)
+    return res.json(doc)
+  })
+}
+
+exports.findProfilePublic = (req, res) => {
+  StudentProfile.findById(req.body.id).populate('researchInterests').exec(function(err, doc) {
+    if(err) return res.status(401).json('Could not get student profile')
+    res.json(doc)
   })
 }
