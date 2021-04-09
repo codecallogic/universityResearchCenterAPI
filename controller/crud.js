@@ -5,6 +5,7 @@ const OpportunityForStudents = require('../models/opportunities-students')
 const HeaderComponent = require('../models/header')
 const StudentProfile = require('../models/student-profile')
 const Tags = require('../models/tags')
+const Webpage = require('../models/webpage')
 
 // ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
@@ -492,5 +493,42 @@ exports.findProfilePublic = (req, res) => {
   StudentProfile.findById(req.body.id).populate('researchInterests').exec(function(err, doc) {
     if(err) return res.status(401).json('Could not get student profile')
     res.json(doc)
+  })
+}
+
+exports.createWebpage = (req, res) => {
+  Webpage.findOne({heading: req.body.webpage.heading}, (err, webpage) => {
+    if(webpage) return res.status(401).json('You cannot have a webpage with duplicate headings')
+
+    const newWebpage = new Webpage(req.body.webpage)
+
+    newWebpage.save( (err, results) => {
+      if(err) return res.status(401).json(`Sorry we're having trouble creating the webpage`)
+      res.json('Webpage was created successfully')
+    })
+  })
+}
+
+exports.webpageList = (req, res) => {
+  Webpage.find({}, (err, results) => {
+    if(err) return res.status(401).json('Could not get webpage data')
+    res.json(results)
+  })
+}
+
+exports.updateWebpage = (req, res) => {
+  Webpage.findByIdAndUpdate(req.body.edit._id, req.body.edit, (err, results) => {
+    if(err) return res.status(400).json('Could not update webpage')
+    Webpage.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get webpage content for students')
+      res.json(results)
+    })
+  })
+}
+
+exports.getWebpageContent = (req, res) => {
+  Webpage.findById(req.params.id, (err, doc) => {
+    if(err) return res.status(401).json('Could not get webpage content')
+    return res.json(doc)
   })
 }

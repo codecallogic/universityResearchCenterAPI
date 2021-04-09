@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const {createAnnouncement, listAnnouncements, updateAnnouncement, deleteAnnouncement, listAnnouncementsPublic, createMeeting, listMeetings, updateMeeting, deleteMeeting, listMeetingsPublic, createFacultyOpportunity, listFacultyOpportunities, updateFacultyOpportunity, deleteFacultyOpportunity, listFacultyOpportunitiesPublic, createStudentOpportunity, listStudentOpportunities, updateStudentOpportunity, deleteStudentOpportunity, listStudentOpportunitiesPublic, createHeader, updateHeader, deleteHeader, headerList, headerComponentPublic, createStudentProfile, updateStudentProfile, findProfile, deleteStudentProfile, studentList, getStudentProfile, studentProfilesPublic, findProfilePublic} = require('../controller/crud')
+const {createAnnouncement, listAnnouncements, updateAnnouncement, deleteAnnouncement, listAnnouncementsPublic, createMeeting, listMeetings, updateMeeting, deleteMeeting, listMeetingsPublic, createFacultyOpportunity, listFacultyOpportunities, updateFacultyOpportunity, deleteFacultyOpportunity, listFacultyOpportunitiesPublic, createStudentOpportunity, listStudentOpportunities, updateStudentOpportunity, deleteStudentOpportunity, listStudentOpportunitiesPublic, createHeader, updateHeader, deleteHeader, headerList, headerComponentPublic, createStudentProfile, updateStudentProfile, findProfile, deleteStudentProfile, studentList, getStudentProfile, studentProfilesPublic, findProfilePublic, createWebpage, webpageList, updateWebpage, getWebpageContent} = require('../controller/crud')
 
 // Middleware
 const {requiresLogin, adminAuth} = require('../controller/auth')
@@ -39,5 +39,9 @@ router.get('/student-profile/list', requiresLogin, adminAuth, studentList)
 router.get('/student-profile/:id', getStudentProfile)
 router.get('/student-profiles/public', studentProfilesPublic)
 router.post('/student-profile/find/public', findProfilePublic)
+router.post('/webpage/create', requiresLogin, adminAuth, createWebpage)
+router.get('/webpage/list', requiresLogin, adminAuth, webpageList)
+router.post('/webpage/update', requiresLogin, adminAuth, updateWebpage)
+router.get('/webpage/:id', getWebpageContent)
 
 module.exports  = router
