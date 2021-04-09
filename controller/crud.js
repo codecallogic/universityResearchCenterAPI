@@ -526,6 +526,16 @@ exports.updateWebpage = (req, res) => {
   })
 }
 
+exports.deleteWebpage = (req, res) => {
+  Webpage.findByIdAndDelete(req.body[0], (err, response) => {
+    if(err) res.status(400).json('Error deleting the webpage')
+    Webpage.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get webpages')
+      res.json(results)
+    })
+  })
+}
+
 exports.getWebpageContent = (req, res) => {
   Webpage.findById(req.params.id, (err, doc) => {
     if(err) return res.status(401).json('Could not get webpage content')
