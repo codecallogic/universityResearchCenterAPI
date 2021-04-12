@@ -339,18 +339,53 @@ exports.headerComponentPublic = (req, res) => {
 }
 
 // STUDENT PROFILES
-exports.createStudentProfile = (req, res) => {
-
-  delete req.body['researchInterests']
+exports.createStudentProfile = async (req, res) => {
+  let tags = req.body.student['researchInterests']
+  let addBackTags = req.body.student['researchInterests']
+  delete req.body.student['researchInterests']
   
-  StudentProfile.findOne({$or: [{linkedIn: req.body.student.linkedIn}, {email: req.body.student.email}]}, (err, student) => {
-    if(student) return res.status(401).json('You cannot have accounts with duplicate LinkedIn or email for student profile')
+  let found = await Tags.find({tag: tags}, (err, item) => {}).exec()
 
-    const newStudent = new StudentProfile(req.body.student)
+  // TO CHECK IF TAGS EXISTS IN STUDENT PROFILE REFERENCE USE THESE STRINGS TO CHECK DATA
+  let holdFound = [...found]
+  holdFound = holdFound.map( (item) => {
+    return item._id
+  })
 
-    newStudent.save( (err, results) => {
-      if(err) return res.status(401).json(`Sorry we're having trouble creating the student`)
-      res.json('Student profile was created successfully')
+  if(found.length > 0){
+    found.forEach( (item) => {
+      tags = tags.filter( (i) => {return i !== item.tag})
+    })
+  }
+
+  let json = tags.map( (i) => {
+    return {"tag": i}
+  })
+
+  Tags.create(json, (err, item) => {
+
+  if(err) return res.status(400).json('There was an error saving a tag')
+
+    Tags.find({tag: addBackTags}, (err, tag) => {
+    
+      req.body.student['researchInterests'] = []  
+      
+      if(tag){
+        tag.forEach( (i) => {
+          req.body.student['researchInterests'].push(i._id)
+        })
+      }
+
+      StudentProfile.findOne({$or: [{linkedIn: req.body.student.linkedIn}, {email: req.body.student.email}]}, (err, student) => {
+        if(student) return res.status(401).json('You cannot have accounts with duplicate LinkedIn or email for student profile')
+
+        const newStudent = new StudentProfile(req.body.student)
+
+        newStudent.save( (err, results) => {
+          if(err) return res.status(401).json(`Sorry we're having trouble creating the student`)
+          res.json('Student profile was created successfully')
+        })
+      })
     })
   })
 }
