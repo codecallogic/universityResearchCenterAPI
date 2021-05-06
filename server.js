@@ -16,7 +16,7 @@ const crudRoutes = require('./routes/crud')
 // MIDDLEWARE
 app.use(morgan('dev'));
 app.use(express.json());
-app.use('/files', express.static('public'))
+app.use('/files/storage', express.static('public'))
 app.use(cors({credentials: true, origin: process.env.CLIENT_URL}))
 
 // API
