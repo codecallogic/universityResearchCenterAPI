@@ -3,7 +3,7 @@ const router = express.Router()
 const {read} = require('../controller/user')
 
 // Middleware
-const {requiresLogin, adminAuth} = require('../controller/auth')
+const {requiresLogin, adminAuth, upload} = require('../controller/auth')
 
 router.get('/admin', requiresLogin, adminAuth, read)
 

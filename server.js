@@ -1,6 +1,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const multer = require('multer')
 require('dotenv').config()
 require('./config/database')
 
@@ -15,6 +16,7 @@ const crudRoutes = require('./routes/crud')
 // MIDDLEWARE
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(express.static('public'))
 app.use(cors({credentials: true, origin: process.env.CLIENT_URL}))
 
 // API
@@ -26,11 +28,36 @@ app.use('/api', userRoutes, (err, req, res, next) => {
     res.status(401).json('Please refresh the page, and login first.');
   }
  })
+ 
  app.use('/api', crudRoutes, (err, req, res, next) => {
   if (err.name === 'UnauthorizedError') {
     console.log(err)
     res.status(401).json('Please refresh the page, and login first.');
   }
+ })
+
+let storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+  cb(null, 'public')
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' +file.originalname )
+  }
+})
+
+let upload = multer({ storage: storage }).single('file')
+
+ app.post('/api/upload', function(req, res){
+  console.log(req.body)
+  upload(req, res, function (err) {
+      if (err instanceof multer.MulterError) {
+          return res.status(500).json(err)
+      } else if (err) {
+          return res.status(500).json(err)
+      }
+  return res.status(200).send(req.file)
+
+  })
  })
 
 const port = process.env.PORT || 3001
