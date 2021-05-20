@@ -355,23 +355,36 @@ exports.headerList = (req, res) => {
 }
 
 exports.updateHeader = (req, res) => {
-  const {id, enabled, headline, subheading, button, buttonLink, imageLeftColumn, imageRightColumn, captionOne, captionTwo} = req.body
+  headerUpload(req, res, function (err) {
+    // console.log(req.files)
+    // console.log(req.body)
 
-  HeaderComponent.findByIdAndUpdate(id, {$set: {
-    'enabled': enabled,
-    'headline': headline,
-    'subheading': subheading,
-    'button': button,
-    'buttonLink': buttonLink,
-    'imageLeftColumn': imageLeftColumn,
-    'imageRightColumn': imageRightColumn,
-    'captionOne': captionOne,
-    'captionTwo': captionTwo
-  }}, (err, results) => {
-    if(err) return res.status(400).json('Could not update header')
-    HeaderComponent.find({}, (err, results) => {
-      if(err) return res.status(401).json('Could not get header for faculty')
-      res.json(results)
+    if (err instanceof multer.MulterError) {
+      console.log(err)
+      return res.status(500).json(err)
+    } else if (err) {
+      console.log(err)
+        return res.status(500).json(err)
+    }
+    
+    const {id, enabled, headline, subheading, button, buttonLink, captionOne, captionTwo} = req.body
+
+    HeaderComponent.findByIdAndUpdate(id, {$set: {
+      'enabled': enabled,
+      'headline': headline,
+      'subheading': subheading,
+      'button': button,
+      'buttonLink': buttonLink,
+      'imageLeftColumn': req.files.imageLeftColumn[0].filename,
+      'imageRightColumn': req.files.imageRightColumn[0].filename,
+      'captionOne': captionOne,
+      'captionTwo': captionTwo
+    }}, (err, results) => {
+      if(err) return res.status(400).json('Could not update header')
+      HeaderComponent.find({}, (err, results) => {
+        if(err) return res.status(401).json('Could not get header for faculty')
+        res.json(results)
+      })
     })
   })
 }
