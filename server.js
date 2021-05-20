@@ -61,6 +61,6 @@ app.post('/api/upload', function(req, res){
   })
  })
 
-const port = process.env.PORT || 81
+const port = process.env.PORT || 3001
 
 app.listen(port, () => console.log(`Server is running on port ${port}`))

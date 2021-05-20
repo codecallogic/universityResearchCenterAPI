@@ -17,14 +17,24 @@ let storage = multer.diskStorage({
   }
 })
 
+let storageHeader = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname )
+  }
+})
+
 let upload = multer({ storage: storage }).single('file')
+let headerUpload = multer({ storage: storageHeader }).fields([{name: 'imageLeftColumn'}, {name: 'imageRightColumn'}])
 
 
 // ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
   upload(req, res, function (err) {
     const {title, subtitle, imageDescr, primary, message} = req.body
-    let imageURL = req.file.filename
+    let imageURL = req.file ? req.file.filename : null
 
     console.log(req.body)
     console.log(imageURL)
@@ -76,7 +86,7 @@ exports.updateAnnouncement = (req, res) => {
   upload(req, res, function (err) {
 
     const {id, title, subtitle, imageURL, imageDescr, primary, enabled, message} = req.body
-    console.log(imageURL)
+
     let imageURLForm = req.file ? req.file.filename : imageURL
 
     if (err instanceof multer.MulterError) {
@@ -310,14 +320,31 @@ exports.listStudentOpportunitiesPublic = (req, res) => {
 
 // HEADER COMPONENT
 exports.createHeader = (req, res) => {
-  const newHeaderComponent = new HeaderComponent(req.body.header)
+  headerUpload(req, res, function (err) {
+    // console.log(req.body)
+    // console.log(req.files.imageLeftColumn[0])
 
-  newHeaderComponent.save( (err, results) => {
-    console.log(err)
-    if(err) return res.status(401).json(`Sorry we're having trouble creating the header slide`)
-    return res.json('Header slider was created')
-  })
+    if (err instanceof multer.MulterError) {
+      console.log(err)
+      return res.status(500).json(err)
+    } else if (err) {
+      console.log(err)
+        return res.status(500).json(err)
+    }
+
+    req.body.imageLeftColumn = req.files.imageLeftColumn[0].filename
+
+    req.body.imageRightColumn = req.files.imageRightColumn[0].filename
     
+    const newHeaderComponent = new HeaderComponent(req.body)
+
+    newHeaderComponent.save( (err, results) => {
+      err ? console.log(err) : null
+      console.log(results)
+      if(err) return res.status(401).json(`Sorry we're having trouble creating the header slide`)
+      return res.json('Header slider was created')
+    })
+  })
 }
 
 exports.headerList = (req, res) => {
