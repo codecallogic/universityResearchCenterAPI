@@ -356,8 +356,8 @@ exports.headerList = (req, res) => {
 
 exports.updateHeader = (req, res) => {
   headerUpload(req, res, function (err) {
-    console.log(req.files)
-    console.log(req.body)
+    // console.log(req.files)
+    // console.log(req.body)
 
     if (err instanceof multer.MulterError) {
       console.log(err)
