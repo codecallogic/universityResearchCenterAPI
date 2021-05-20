@@ -375,8 +375,8 @@ exports.updateHeader = (req, res) => {
       'subheading': subheading,
       'button': button,
       'buttonLink': buttonLink,
-      'imageLeftColumn': req.files.imageLeftColumn[0].filename,
-      'imageRightColumn': req.files.imageRightColumn[0].filename,
+      'imageLeftColumn': req.files.imageLeftColumn ? req.files.imageLeftColumn[0].filename : '',
+      'imageRightColumn': req.files.imageRightColumn ? req.files.imageRightColumn[0].filename : '',
       'captionOne': captionOne,
       'captionTwo': captionTwo
     }}, (err, results) => {
