@@ -356,8 +356,8 @@ exports.headerList = (req, res) => {
 
 exports.updateHeader = (req, res) => {
   headerUpload(req, res, function (err) {
-    // console.log(req.files)
-    // console.log(req.body)
+    console.log(req.files)
+    console.log(req.body)
 
     if (err instanceof multer.MulterError) {
       console.log(err)
@@ -367,7 +367,7 @@ exports.updateHeader = (req, res) => {
         return res.status(500).json(err)
     }
     
-    const {id, enabled, headline, subheading, button, buttonLink, captionOne, captionTwo} = req.body
+    const {id, enabled, headline, subheading, button, buttonLink, captionOne, captionTwo, imageLeftColumn, imageRightColumn} = req.body
 
     HeaderComponent.findByIdAndUpdate(id, {$set: {
       'enabled': enabled,
@@ -375,8 +375,8 @@ exports.updateHeader = (req, res) => {
       'subheading': subheading,
       'button': button,
       'buttonLink': buttonLink,
-      'imageLeftColumn': req.files.imageLeftColumn ? req.files.imageLeftColumn[0].filename : '',
-      'imageRightColumn': req.files.imageRightColumn ? req.files.imageRightColumn[0].filename : '',
+      'imageLeftColumn': req.files.imageLeftColumn ? req.files.imageLeftColumn[0].filename : imageLeftColumn[0],
+      'imageRightColumn': req.files.imageRightColumn ? req.files.imageRightColumn[0].filename : imageRightColumn[0],
       'captionOne': captionOne,
       'captionTwo': captionTwo
     }}, (err, results) => {

@@ -1,6 +1,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const multer = require('multer')
 require('dotenv').config()
 require('./config/database')
 
