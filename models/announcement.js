@@ -29,11 +29,12 @@ const announcementSchema = new Schema(
   },
   primary: {
     type: Boolean,
-    default: false
   }
 },
 {
     timestamps: true
 })
+
+announcementSchema.index({primary: 1}, {unique: true, partialFilterExpression: {primary: true}})
 
 module.exports = mongoose.model('Announcement', announcementSchema)

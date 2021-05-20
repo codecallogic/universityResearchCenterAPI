@@ -12,5 +12,5 @@ mongoose.connect(process.env.MONGO_ATLAS_CLUSTER,
 const db = mongoose.connection
 
 db.on('connected', function(){
-  console.log(`Connected to mongoDB at ${db.host} : ${db.port} : database ${db.name}`)
+  console.log(`Connected to mongoDB database at ${db.host} : ${db.port} : database ${db.name}`)
 })

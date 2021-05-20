@@ -38,28 +38,29 @@ app.use('/api', userRoutes, (err, req, res, next) => {
 
 let storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    // console.log(file)
   cb(null, 'public')
   },
   filename: function (req, file, cb) {
+    // console.log(file)
     cb(null, Date.now() + '-' +file.originalname )
   }
 })
 
 let upload = multer({ storage: storage }).single('file')
 
- app.post('/api/upload', function(req, res){
-  console.log(req.body)
+app.post('/api/upload', function(req, res){
   upload(req, res, function (err) {
+
       if (err instanceof multer.MulterError) {
           return res.status(500).json(err)
       } else if (err) {
           return res.status(500).json(err)
       }
-  return res.status(200).send(req.file)
-
+  // return res.status(200).send(req.file)
   })
  })
 
-const port = process.env.PORT || 3001
+const port = process.env.PORT || 81
 
 app.listen(port, () => console.log(`Server is running on port ${port}`))

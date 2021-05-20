@@ -6,35 +6,61 @@ const HeaderComponent = require('../models/header')
 const StudentProfile = require('../models/student-profile')
 const Tags = require('../models/tags')
 const Webpage = require('../models/webpage')
+const multer = require('multer')
+
+let storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname )
+  }
+})
+
+let upload = multer({ storage: storage }).single('file')
+
 
 // ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
-  const {title, subtitle, imageURL, imageDescr, primary, message} = req.body.content
+  upload(req, res, function (err) {
+    const {title, subtitle, imageDescr, primary, message} = req.body
+    let imageURL = req.file.filename
 
-  if(primary === true){
-    Announcement.find({primary: true}, (err, pri) => {
-    const allPrimary = pri.map( (data) => {
-      return data._id
-    })
+    console.log(req.body)
+    console.log(imageURL)
+    
+    if (err instanceof multer.MulterError) {
+        return res.status(500).json(err)
+    } else if (err) {
+        return res.status(500).json(err)
+    }
 
-    Announcement.updateMany(
-      {_id: { $in: allPrimary }}, 
-      {$set: {'primary': false}}, 
-      {multi: true},
-      (err, results) => {
-        if(err) return res.status(400).json('Could not update announcement')
+    if(primary === true){
+      Announcement.find({primary: true}, (err, pri) => {
+      const allPrimary = pri.map( (data) => {
+        return data._id
       })
-    })
-  }
+
+
+      Announcement.updateMany(
+        {_id: { $in: allPrimary }}, 
+        {$set: {'primary': false}}, 
+        {multi: true},
+        (err, results) => {
+          if(err) return res.status(400).json('Could not update announcement')
+        })
+      })
+    }
   
-  Announcement.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, announcement) => {
-    if(announcement) return res.status(401).json('You cannot have duplicate announcements with same title or subtitle')
+    Announcement.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, announcement) => {
+      if(announcement) return res.status(401).json('You cannot have duplicate announcements with same title or subtitle')
 
-    const newAnnouncement = new Announcement({title, subtitle, imageURL, imageDescr, primary, message})
+      const newAnnouncement = new Announcement({title, subtitle, imageURL, imageDescr, primary, message})
 
-    newAnnouncement.save( (err, results) => {
-      if(err) return res.status(401).json(`Sorry we're having trouble posting the announcement`)
-      res.json('Announcement has been posted')
+      newAnnouncement.save( (err, results) => {
+        if(err) return res.status(401).json(`Sorry we're having trouble posting the announcement`)
+        res.json('Announcement has been posted')
+      })
     })
   })
 }
@@ -47,38 +73,40 @@ exports.listAnnouncements = (req, res) => {
 }
 
 exports.updateAnnouncement = (req, res) => {
-  const {id, title, subtitle, imageURL, imageDescr, primary, enabled, message} = req.body
+  upload(req, res, function (err) {
 
-  if(primary === true){
-    Announcement.find({primary: true}, (err, pri) => {
-    const allPrimary = pri.map( (data) => {
-      return data._id
-    })
+    const {id, title, subtitle, imageURL, imageDescr, primary, enabled, message} = req.body
+    console.log(imageURL)
+    let imageURLForm = req.file ? req.file.filename : imageURL
 
-    Announcement.updateMany(
-      {_id: { $in: allPrimary }}, 
-      {$set: {'primary': false}}, 
-      {multi: true},
-      (err, results) => {
-        if(err) return res.status(400).json('Could not update announcement')
+    if (err instanceof multer.MulterError) {
+      console.log(err)
+      return res.status(500).json(err)
+    } else if (err) {
+      console.log(err)
+        return res.status(500).json(err)
+    }
+
+    let newPrimary = primary == 'true' ? true : false
+  
+    Announcement.findByIdAndUpdate(id, {$set: {
+      'title': title,
+      'subtitle': subtitle,
+      'imageURL': imageURLForm,
+      'imageDescr': imageDescr,
+      'primary': primary,
+      'enabled': enabled,
+      'message': message
+    }}, { upsert: true, new: true }, (err, results) => {
+      console.log(err)
+      if(err) return res.status(400).json(err.codeName ? `${err.codeName}, you can't have two primary announcements`: 'Could not update category')
+      Announcement.find({}, (err, results) => {
+        console.log(results)
+        if(err) return res.status(401).json('Could not get announcements')
+        res.json(results)
       })
     })
-  }
-  
-  Announcement.findByIdAndUpdate(id, {$set: {
-    'title': title,
-    'subtitle': subtitle,
-    'imageURL': imageURL,
-    'imageDescr': imageDescr,
-    'primary': primary,
-    'enabled': enabled,
-    'message': message
-  }}, (err, results) => {
-    if(err) return res.status(400).json('Could not update category')
-    Announcement.find({}, (err, results) => {
-      if(err) return res.status(401).json('Could not get announcements')
-      res.json(results)
-    })
+
   })
 }
 
@@ -339,51 +367,66 @@ exports.headerComponentPublic = (req, res) => {
 }
 
 // STUDENT PROFILES
-exports.createStudentProfile = async (req, res) => {
-  let tags = req.body.student['researchInterests']
-  let addBackTags = req.body.student['researchInterests']
-  delete req.body.student['researchInterests']
-  
-  let found = await Tags.find({tag: tags}, (err, item) => {}).exec()
+exports.createStudentProfile = (req, res) => {
+  upload(req, res, async function (err) {
+    let photo = req.file ? req.file.filename : null
 
-  // TO CHECK IF TAGS EXISTS IN STUDENT PROFILE REFERENCE USE THESE STRINGS TO CHECK DATA
-  let holdFound = [...found]
-  holdFound = holdFound.map( (item) => {
-    return item._id
-  })
-
-  if(found.length > 0){
-    found.forEach( (item) => {
-      tags = tags.filter( (i) => {return i !== item.tag})
-    })
-  }
-
-  let json = tags.map( (i) => {
-    return {"tag": i}
-  })
-
-  Tags.create(json, (err, item) => {
-
-  if(err) return res.status(400).json('There was an error saving a tag')
-
-    Tags.find({tag: addBackTags}, (err, tag) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(500).json(err)
+    } else if (err) {
+        return res.status(500).json(err)
+    }
     
-      req.body.student['researchInterests'] = []  
+    let tags = req.body.researchInterests.split(',')
+    let addBackTags = req.body.researchInterests.split(',')
+    delete req.body.researchInterests
+    
+    let found = await Tags.find({tag: tags}, (err, item) => {}).exec()
+
+    // TO CHECK IF TAGS EXISTS IN STUDENT PROFILE REFERENCE USE THESE STRINGS TO CHECK DATA
+    let holdFound = [...found]
+    holdFound = holdFound.map( (item) => {
+      return item._id
+    })
+
+    if(found.length > 0){
+      found.forEach( (item) => {
+        tags = tags.filter( (i) => {return i !== item.tag})
+      })
+    }
+
+    let json = tags.map( (i) => {
+      return {"tag": i}
+    })
+
+    console.log(json)
+
+    Tags.create(json, (err, item) => {
+    console.log(err)
+    if(err) return res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
+
+      Tags.find({tag: addBackTags}, (err, tag) => {
       
-      if(tag){
-        tag.forEach( (i) => {
-          req.body.student['researchInterests'].push(i._id)
-        })
-      }
+        req.body.researchInterests = []  
+        
+        if(tag){
+          tag.forEach( (i) => {
+            req.body.researchInterests.push(i._id)
+          })
+        }
 
-      StudentProfile.findOne({$or: [{linkedIn: req.body.student.linkedIn}, {email: req.body.student.email}]}, (err, student) => {
-        if(student) return res.status(401).json('You cannot have accounts with duplicate LinkedIn or email for student profile')
+        StudentProfile.findOne({$or: [{linkedIn: req.body.linkedIn}, {email: req.body.email}]}, (err, student) => {
+          if(student) return res.status(401).json('You cannot have accounts with duplicate LinkedIn or email for student profile')
 
-        const newStudent = new StudentProfile(req.body.student)
+          req.body.photo = photo
+          
+          const newStudent = new StudentProfile(req.body)
 
-        newStudent.save( (err, results) => {
-          if(err) return res.status(401).json(`Sorry we're having trouble creating the student`)
-          res.json('Student profile was created successfully')
+          newStudent.save( (err, results) => {
+            console.log(results)
+            if(err) return res.status(401).json(`Sorry we're having trouble creating the student`)
+            res.json('Student profile was created successfully')
+          })
         })
       })
     })
@@ -391,92 +434,102 @@ exports.createStudentProfile = async (req, res) => {
 }
 
 exports.updateStudentProfile = async (req, res) => {
-  let tags = req.body['researchInterests']
-  let tagsToRemove = req.body['tagsToRemove']
-  delete req.body['researchInterests']
+  upload(req, res, async function (err) {
+    let photo = req.file ? req.file.filename : req.body.photo
+    let tags = req.body.researchInterests.split(',')
+    let tagsToRemove = req.body.tagsToRemove ? req.body.tagsToRemove.split(',') : null
+    delete req.body.researchInterests
 
-  let found = await Tags.find({tag: tags}, (err, item) => {}).exec()
+    if (err instanceof multer.MulterError) {
+      return res.status(500).json(err)
+    } else if (err) {
+        return res.status(500).json(err)
+    }
 
-  // TO CHECK IF TAGS EXISTS IN STUDENT PROFILE REFERENCE USE THESE STRINGS TO CHECK DATA
-  let holdFound = [...found]
-  holdFound = holdFound.map( (item) => {
-    return item._id
-  })
+    let found = await Tags.find({tag: tags}, (err, item) => {}).exec()
 
-  if(found.length > 0){
-    found.forEach( (item) => {
-      tags = tags.filter( (i) => {return i !== item.tag})
+    // TO CHECK IF TAGS EXISTS IN STUDENT PROFILE REFERENCE USE THESE STRINGS TO CHECK DATA
+    let holdFound = [...found]
+    holdFound = holdFound.map( (item) => {
+      return item._id
     })
-  }
 
-  let json = tags.map( (i) => {
-    return {"tag": i}
-  })
-  
-  Tags.create(json, (err, item) => {
+    if(found.length > 0){
+      found.forEach( (item) => {
+        tags = tags.filter( (i) => {return i !== item.tag})
+      })
+    }
+
+    let json = tags.map( (i) => {
+      return {"tag": i}
+    })
     
-    // console.log(err)
-    if(err) return res.status(400).json('There was an error saving a tag')
+    Tags.create(json, (err, item) => {
+      console.log(err._message)
+      if(!err._message) return res.status(400).json(err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
 
-    StudentProfile.findByIdAndUpdate(req.body._id, req.body, (err, updatedStudent) => {
-      // console.log(err)
-      if(err) return res.status(400).json('Could not update student')
-
-      StudentProfile.findById(req.body._id).populate('researchInterests').exec( (err, student) => {
+      req.body.photo = photo
+      
+      StudentProfile.findByIdAndUpdate(req.body._id, req.body, (err, updatedStudent) => {
+        console.log(err)
         // console.log(err)
-        if(err) return res.status(401).json('Could not find student')
-        
-        if(item){
-          // ADD TAGS THAT WERE JUST CREATED
+        if(err) return res.status(400).json('Could not update student')
 
-          item.forEach( (i) => {
-            student.researchInterests.push(i._id)
-          })
-        }else{
-           // ADD TAGS THAT ARE NOT IN STUDENT PROFILE BUT EXIST IN TAG DATA MODEL
+        StudentProfile.findById(req.body._id).populate('researchInterests').exec( (err, student) => {
+          console.log(err)
+          if(err) return res.status(401).json('Could not find student')
           
-          let tagsInProfile = []
-          if(student.researchInterests){
-            tagsInProfile = student.researchInterests.map( (tag) => {
-              return tag._id
+          if(item){
+            // ADD TAGS THAT WERE JUST CREATED
+
+            item.forEach( (i) => {
+              student.researchInterests.push(i._id)
             })
-          }          
-          
-          holdFound.forEach( (item) => {
-            let found
-            if(tagsInProfile){
-              found = tagsInProfile.find( value => value.toString() == item)
-            }
+          }else{
+            // ADD TAGS THAT ARE NOT IN STUDENT PROFILE BUT EXIST IN TAG DATA MODEL
+            
+            let tagsInProfile = []
+            if(student.researchInterests){
+              tagsInProfile = student.researchInterests.map( (tag) => {
+                return tag._id
+              })
+            }          
+            
+            holdFound.forEach( (item) => {
+              let found
+              if(tagsInProfile){
+                found = tagsInProfile.find( value => value.toString() == item)
+              }
 
-            found ? null : (student.researchInterests.push(item))
-          })
-        }
-
-        if(tagsToRemove){
-          // REMOVE TAGS FROM STUDENT PROFILE
-          let newArray = student.researchInterests.filter( (item) => {
-            if(item.tag){
-              if(tagsToRemove.indexOf(item.tag.toString()) == -1) return item
-            }else{
-              return item
-            }
-          })
-
-          let ids = []
-          if(newArray){
-            ids = newArray.filter( (item) => item)
+              found ? null : (student.researchInterests.push(item))
+            })
           }
 
-          student.researchInterests = ids
-        }
+          if(tagsToRemove){
+            // REMOVE TAGS FROM STUDENT PROFILE
+            let newArray = student.researchInterests.filter( (item) => {
+              if(item.tag){
+                if(tagsToRemove.indexOf(item.tag.toString()) == -1) return item
+              }else{
+                return item
+              }
+            })
 
-        student.save( (err) => {
-          // console.log(err)
-          if(err) return res.status(401).json('Could not save tags to student model')
-          StudentProfile.findById(req.body._id).populate('researchInterests').exec(function(err, doc) {
+            let ids = []
+            if(newArray){
+              ids = newArray.filter( (item) => item)
+            }
+
+            student.researchInterests = ids
+          }
+
+          student.save( (err, results) => {
             // console.log(err)
-            if(err) return res.status(401).json('Could not get students')
-            res.json(doc)
+            if(err) return res.status(401).json('Could not save tags to student model')
+            StudentProfile.findById(req.body._id).populate('researchInterests').exec(function(err, doc) {
+              if(err) return res.status(401).json('Could not get students')
+              res.json(doc)
+            })
           })
         })
       })
