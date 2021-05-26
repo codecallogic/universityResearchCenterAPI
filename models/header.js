@@ -23,7 +23,15 @@ const Header = new Schema(
     type: String,
     required: true,
   },
+  imageLeftColumnID: {
+    type: String,
+    required: true,
+  },
   imageRightColumn: {
+    type: String,
+    required: true,
+  },
+  imageRightColumnID: {
     type: String,
     required: true,
   },

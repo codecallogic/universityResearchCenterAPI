@@ -7,6 +7,10 @@ const studentProfileSchema = new Schema(
     type: String,
     required: true
   },
+  nanoid: {
+    type: String,
+    required: true
+  },
   firstName: {
     type: String,
     required: true

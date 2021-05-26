@@ -27,6 +27,10 @@ const announcementSchema = new Schema(
     default: true,
     required: true
   },
+  nanoid: {
+    type: String,
+    required: true
+  },
   primary: {
     type: Boolean,
   }

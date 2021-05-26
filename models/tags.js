@@ -5,12 +5,13 @@ const Tags = new Schema(
 {
   tag: {
     type: String,
-    required: true,
-    unique: true
+    unique: true,
+    required: true
   }
 },
 {
     timestamps: true
 })
+
 
 module.exports = mongoose.model('Tags', Tags)

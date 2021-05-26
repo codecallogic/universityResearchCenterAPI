@@ -7,13 +7,14 @@ const StudentProfile = require('../models/student-profile')
 const Tags = require('../models/tags')
 const Webpage = require('../models/webpage')
 const multer = require('multer')
+const path  = require('path')
 
 let storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public')
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname )
+    cb(null, file.originalname)
   }
 })
 
@@ -32,12 +33,13 @@ let headerUpload = multer({ storage: storageHeader }).fields([{name: 'imageLeftC
 
 // ANNOUNCEMENTS
 exports.createAnnouncement = (req, res) => {
+  // console.log(req.body)
   upload(req, res, function (err) {
-    const {title, subtitle, imageDescr, primary, message} = req.body
+    const {title, subtitle, imageDescr, primary, message, nanoid} = req.body
     let imageURL = req.file ? req.file.filename : null
 
-    console.log(req.body)
-    console.log(imageURL)
+    // console.log(req.body)
+    // console.log(imageURL)
     
     if (err instanceof multer.MulterError) {
         return res.status(500).json(err)
@@ -65,7 +67,7 @@ exports.createAnnouncement = (req, res) => {
     Announcement.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, announcement) => {
       if(announcement) return res.status(401).json('You cannot have duplicate announcements with same title or subtitle')
 
-      const newAnnouncement = new Announcement({title, subtitle, imageURL, imageDescr, primary, message})
+      const newAnnouncement = new Announcement({title, subtitle, imageURL, imageDescr, nanoid, primary, message})
 
       newAnnouncement.save( (err, results) => {
         if(err) return res.status(401).json(`Sorry we're having trouble posting the announcement`)
@@ -84,6 +86,8 @@ exports.listAnnouncements = (req, res) => {
 
 exports.updateAnnouncement = (req, res) => {
   upload(req, res, function (err) {
+    console.log(req.body)
+    console.log(req.file)
 
     const {id, title, subtitle, imageURL, imageDescr, primary, enabled, message} = req.body
 
@@ -321,8 +325,8 @@ exports.listStudentOpportunitiesPublic = (req, res) => {
 // HEADER COMPONENT
 exports.createHeader = (req, res) => {
   headerUpload(req, res, function (err) {
-    // console.log(req.body)
-    // console.log(req.files.imageLeftColumn[0])
+    console.log(req.body)
+    console.log(req.files)
 
     if (err instanceof multer.MulterError) {
       console.log(err)
@@ -333,7 +337,6 @@ exports.createHeader = (req, res) => {
     }
 
     req.body.imageLeftColumn = req.files.imageLeftColumn[0].filename
-
     req.body.imageRightColumn = req.files.imageRightColumn[0].filename
     
     const newHeaderComponent = new HeaderComponent(req.body)
@@ -356,8 +359,8 @@ exports.headerList = (req, res) => {
 
 exports.updateHeader = (req, res) => {
   headerUpload(req, res, function (err) {
-    // console.log(req.files)
-    // console.log(req.body)
+    console.log(req.files)
+    console.log(req.body)
 
     if (err instanceof multer.MulterError) {
       console.log(err)
@@ -367,7 +370,7 @@ exports.updateHeader = (req, res) => {
         return res.status(500).json(err)
     }
     
-    const {id, enabled, headline, subheading, button, buttonLink, captionOne, captionTwo, imageLeftColumn, imageRightColumn} = req.body
+    const {id, enabled, headline, subheading, button, buttonLink, captionOne, captionTwo, imageLeftColumn, imageLeftColumnURL, imageRightColumn, imageRightColumnURL} = req.body
 
     HeaderComponent.findByIdAndUpdate(id, {$set: {
       'enabled': enabled,
@@ -375,8 +378,8 @@ exports.updateHeader = (req, res) => {
       'subheading': subheading,
       'button': button,
       'buttonLink': buttonLink,
-      'imageLeftColumn': req.files.imageLeftColumn ? req.files.imageLeftColumn[0].filename : imageLeftColumn[0],
-      'imageRightColumn': req.files.imageRightColumn ? req.files.imageRightColumn[0].filename : imageRightColumn[0],
+      'imageLeftColumn': req.files.imageLeftColumn ? req.files.imageLeftColumn[0].filename : imageLeftColumnURL,
+      'imageRightColumn': req.files.imageRightColumn ? req.files.imageRightColumn[0].filename : imageRightColumnURL,
       'captionOne': captionOne,
       'captionTwo': captionTwo
     }}, (err, results) => {
@@ -391,8 +394,10 @@ exports.updateHeader = (req, res) => {
 
 exports.deleteHeader = (req, res) => {
   HeaderComponent.findByIdAndDelete(req.body[0], (err, response) => {
+    console.log(err)
     if(err) res.status(400).json('Error deleting the header')
     HeaderComponent.find({}, (err, results) => {
+      console.log(err)
       if(err) return res.status(401).json('Could not get header data')
       res.json(results)
     })
@@ -410,6 +415,8 @@ exports.headerComponentPublic = (req, res) => {
 exports.createStudentProfile = (req, res) => {
   upload(req, res, async function (err) {
     let photo = req.file ? req.file.filename : null
+    console.log(req.file)
+    console.log(req.body)
 
     if (err instanceof multer.MulterError) {
       return res.status(500).json(err)
@@ -442,8 +449,10 @@ exports.createStudentProfile = (req, res) => {
     console.log(json)
 
     Tags.create(json, (err, item) => {
-    console.log(err)
-    if(err) return res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
+    console.log(err._message)
+    if(err) {
+      err._message == 'Tags validation failed' ? true : res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
+    }
 
       Tags.find({tag: addBackTags}, (err, tag) => {
       
@@ -475,6 +484,8 @@ exports.createStudentProfile = (req, res) => {
 
 exports.updateStudentProfile = async (req, res) => {
   upload(req, res, async function (err) {
+    console.log(req.body)
+    console.log(req.file)
     let photo = req.file ? req.file.filename : req.body.photo
     let tags = req.body.researchInterests.split(',')
     let tagsToRemove = req.body.tagsToRemove ? req.body.tagsToRemove.split(',') : null
@@ -506,7 +517,9 @@ exports.updateStudentProfile = async (req, res) => {
     
     Tags.create(json, (err, item) => {
       console.log(err._message)
-      if(!err._message) return res.status(400).json(err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
+      if(err) {
+        err._message == 'Tags validation failed' ? true : res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
+      }
 
       req.body.photo = photo
       
