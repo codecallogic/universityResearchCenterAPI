@@ -518,7 +518,8 @@ exports.updateStudentProfile = async (req, res) => {
     Tags.create(json, (err, item) => {
       console.log(err._message)
       if(err) {
-        err._message == 'Tags validation failed' ? true : res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
+        if(err._message) return err._message == 'Tags validation failed' ? true : null
+        if(!err._message) return res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
       }
 
       req.body.photo = photo
