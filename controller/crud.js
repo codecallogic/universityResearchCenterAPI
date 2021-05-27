@@ -417,8 +417,8 @@ exports.headerComponentPublic = (req, res) => {
 exports.createStudentProfile = (req, res) => {
   upload(req, res, async function (err) {
     let photo = req.file ? req.file.filename : null
-    console.log(req.file)
-    console.log(req.body)
+    // console.log(req.file)
+    // console.log(req.body)
 
     if (err instanceof multer.MulterError) {
       return res.status(500).json(err)
@@ -453,7 +453,8 @@ exports.createStudentProfile = (req, res) => {
     Tags.create(json, (err, item) => {
     // console.log(err._message)
     if(err) {
-      if(err._message) return err._message == 'Tags validation failed' ? true : null
+      console.log(err)
+      if(err._message) err._message == 'Tags validation failed' ? true : null
       if(!err._message) return res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
     }
 
