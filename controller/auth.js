@@ -122,12 +122,15 @@ exports.adminAuth = (req, res, next) => {
 
 // FIXME: Removed Admin access code from login authentication
 exports.adminLogin = (req, res) => {
+  console.log(req.body)
   const {loginCred, password, code} = req.body
   User.findOne({$or: [{email: loginCred}, {username: loginCred}]}, (err, user) => {
+    console.log(err)
       if(err || !user) return res.status(401).json('Username does not exist, please register first')
         if(user.role === 'admin'){
           console.log(user)
         user.comparePassword(password, (err, isMatch) => {
+          console.log(err)
           if(isMatch){
             const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
             const {_id, username, email, role} = user
