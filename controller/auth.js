@@ -122,6 +122,7 @@ exports.adminAuth = (req, res, next) => {
 
 // FIXME: Removed Admin access code from login authentication
 exports.adminLogin = (req, res) => {
+  console.log('Hello')
   console.log(req.body)
   const {loginCred, password, code} = req.body
   User.findOne({$or: [{email: loginCred}, {username: loginCred}]}, (err, user) => {
