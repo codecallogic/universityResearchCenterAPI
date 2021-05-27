@@ -451,7 +451,7 @@ exports.createStudentProfile = (req, res) => {
     console.log(json)
 
     Tags.create(json, (err, item) => {
-    console.log(err._message)
+    // console.log(err._message)
     if(err) {
       if(err._message) return err._message == 'Tags validation failed' ? true : null
       if(!err._message) return res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
