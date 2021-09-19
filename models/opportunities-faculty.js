@@ -14,8 +14,12 @@ const opportunitySchema = new Schema(
     type: String,
     required: true
   },
+  postDate: {
+    type: String,
+    default: ''
+  },
   expiration: {
-    type: Date,
+    type: String,
     default: ''
   },
   enabled: {

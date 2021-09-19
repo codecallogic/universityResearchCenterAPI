@@ -145,14 +145,12 @@ exports.listAnnouncementsPublic = (req, res) => {
 
 // MEETINGS
 exports.createMeeting = (req, res) => {
-  const {title, subtitle, expiration, source, message} = req.body.content
-
-  console.log({'Hello': expiration})
+  const {title, subtitle, expiration, source, message, postDate} = req.body.content
 
   Meeting.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, meeting) => {
     if(meeting) return res.status(401).json('You cannot have duplicate meetings with same title or subtitle')
 
-    const newMeeting = new Meeting({title, subtitle, source, expiration, message})
+    const newMeeting = new Meeting({title, subtitle, source, expiration, message, postDate})
 
     newMeeting.save( (err, results) => {
       if(err) return res.status(401).json(`Sorry we're having trouble posting the meeting`)
@@ -169,12 +167,14 @@ exports.listMeetings = (req, res) => {
 }
 
 exports.updateMeeting = (req, res) => {
-  const {id, title, subtitle, source, expiration, enabled, message} = req.body
+  console.log(req.body)
+  const {id, title, subtitle, source, postDate, expiration, enabled, message} = req.body
   
   Meeting.findByIdAndUpdate(id, {$set: {
     'title': title,
     'subtitle': subtitle,
     'source': source,
+    'postDate': postDate,
     'expiration': expiration,
     'enabled': enabled,
     'message': message
@@ -206,12 +206,12 @@ exports.listMeetingsPublic = (req, res) => {
 
 // OPPORTUNITIES FOR FACULTY
 exports.createFacultyOpportunity = (req, res) => {
-  const {title, subtitle, expiration, source, message} = req.body.content
+  const {title, subtitle, postDate, expiration, source, message} = req.body.content
 
   OpportunityForFaculty.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, meeting) => {
     if(meeting) return res.status(401).json('You cannot have duplicate opportunities with same title or subtitle')
 
-    const newOpportunityForFaculty = new OpportunityForFaculty({title, subtitle, source, expiration, message})
+    const newOpportunityForFaculty = new OpportunityForFaculty({title, subtitle, source, postDate, expiration, message})
 
     newOpportunityForFaculty.save( (err, results) => {
       if(err) return res.status(401).json(`Sorry we're having trouble posting the opportunity`)
@@ -230,12 +230,13 @@ exports.listFacultyOpportunities = (req, res) => {
 }
 
 exports.updateFacultyOpportunity = (req, res) => {
-  const {id, title, subtitle, source, expiration, enabled, message} = req.body
+  const {id, title, subtitle, source, postDate, expiration, enabled, message} = req.body
   
   OpportunityForFaculty.findByIdAndUpdate(id, {$set: {
     'title': title,
     'subtitle': subtitle,
     'source': source,
+    'postDate': postDate,
     'expiration': expiration,
     'enabled': enabled,
     'message': message
@@ -267,12 +268,12 @@ exports.listFacultyOpportunitiesPublic = (req, res) => {
 
 // OPPORTUNITIES FOR STUDENTS
 exports.createStudentOpportunity = (req, res) => {
-  const {title, subtitle, expiration, source, message} = req.body.content
+  const {title, subtitle, postDate, expiration, source, message} = req.body.content
 
   OpportunityForStudents.findOne({$or: [{title: title}, {subtitle: subtitle}]}, (err, meeting) => {
     if(meeting) return res.status(401).json('You cannot have duplicate opportunities with same title or subtitle')
 
-    const newStudentOpportunity = new OpportunityForStudents({title, subtitle, source, expiration, message})
+    const newStudentOpportunity = new OpportunityForStudents({title, subtitle, source, postDate, expiration, message})
 
     newStudentOpportunity.save( (err, results) => {
       if(err) return res.status(401).json(`Sorry we're having trouble posting the opportunity`)
@@ -289,12 +290,13 @@ exports.listStudentOpportunities = (req, res) => {
 }
 
 exports.updateStudentOpportunity = (req, res) => {
-  const {id, title, subtitle, source, expiration, enabled, message} = req.body
+  const {id, title, subtitle, source, postDate, expiration, enabled, message} = req.body
   
   OpportunityForStudents.findByIdAndUpdate(id, {$set: {
     'title': title,
     'subtitle': subtitle,
     'source': source,
+    'postDate': postDate,
     'expiration': expiration,
     'enabled': enabled,
     'message': message
@@ -423,7 +425,7 @@ exports.createStudentProfile = (req, res) => {
     if (err instanceof multer.MulterError) {
       return res.status(500).json(err)
     } else if (err) {
-        return res.status(500).json(err)
+      return res.status(500).json(err)
     }
     
     let tags = req.body.researchInterests.split(',')

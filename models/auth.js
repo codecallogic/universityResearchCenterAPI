@@ -48,6 +48,9 @@ const userSchema = new Schema(
     data: String,
     default: ''
   },
+  tempPassword: {
+    type: String,
+  }
 },
 {
     timestamps: true
