@@ -348,6 +348,13 @@ exports.inviteAdministratorEmail = (email, token, firstName) => {
                                           </td>
                                         </tr>
                                         <tr>
+                                          <td class="pc-fb-font" style="font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 300; line-height: 28px; letter-spacing: -0.2px; color: #151515; padding: 0 20px;" valign="top">
+                                            <p>
+                                              This url will will expire in 24 hours.</p>
+                                            <br>
+                                          </td>
+                                        </tr>
+                                        <tr>
                                           <td height="20" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
                                         </tr>
                                       </tbody>

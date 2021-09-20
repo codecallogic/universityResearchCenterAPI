@@ -20,15 +20,14 @@ const ses = new aws.SES({ apiVersion: '2010-12-01'})
 
 // FIXME: Apply reCAPTCHA if customer is interested
 exports.register = async (req, res) => {
-  console.log(req.body)
-
   // Check if user is exists in database
   User.findOne({or: [{username: req.body.username, email: req.body.email}]}, (err, user) => {
+    console.log(user)
     if(user) return res.status(400).json('Username or email already exists')
 
     // Generate token for new user
     
-    const token = jwt.sign({username: req.body.username, email: req.body.email, firstName: req.body.firstName, lastName: req.body.lastName, role: req.body.role}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '3hr'})
+    const token = jwt.sign({username: req.body.username, email: req.body.email, firstName: req.body.firstName, password: req.body.tempPassword,lastName: req.body.lastName, role: req.body.role}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '24hr'})
 
     // Send email with token url parameters for email confirmation and account activation
 
@@ -50,23 +49,26 @@ exports.register = async (req, res) => {
 }
 
 exports.activate = (req, res) => {
-  const {token} = req.body
-  const {username, email, password, firstName, lastName, role} = jwt.decode(token)
+  const user = jwt.decode(req.body.token)
   
-  jwt.verify(token, process.env.JWT_ACCOUNT_REGISTER, (err, decoded) => {
+  jwt.verify(req.body.token, process.env.JWT_ACCOUNT_REGISTER, (err, decoded) => {
     if(err){
       return res.status(400).json('This url has expired please try signing up again.')
     }
 
     const urlId = shortId.generate()
     
-    User.findOne({$or: [{email}, {username}]}, (err, user) => {
-      if(user){
+    User.findOne({$or: [{email: user.email}, {username: user.username}]}, (err, found) => {
+      if(found){
         console.log(err)
         return res.status(401).json('Email or username already exists')
       }
 
-      const newUser = new User({username, email, password, firstName, lastName, urlId, role})
+      user.urlId = urlId
+      console.log('Hello')
+      console.log(user)
+
+      const newUser = new User(user)
       newUser.save((err, result) => {
         if(err){
           console.log(err)
@@ -88,7 +90,7 @@ exports.activate = (req, res) => {
             expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
             httpOnly: true
           })
-          .send('User is registered')
+          .send('Admin is registered')
         }
       })
     })
