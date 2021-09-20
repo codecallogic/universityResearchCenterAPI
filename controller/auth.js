@@ -5,56 +5,45 @@ const shortId = require('shortid')
 const expressJWT = require('express-jwt')
 const nodemailer = require('nodemailer')
 const mailgun = require('nodemailer-mailgun-transport')
+const aws = require('aws-sdk')
+const {inviteAdministratorEmail} = require('../templates/administrators')
+
+aws.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
+})
+
+const ses = new aws.SES({ apiVersion: '2010-12-01'})
 
 // TODO: Admin login functionality
 
 // FIXME: Apply reCAPTCHA if customer is interested
 exports.register = async (req, res) => {
-  const postExample = {
-    "username": "gustavo",
-    "email": "codecallogic@gmail.com",
-    "password": "admingustavo1*",
-    "firstName": "Gustavo",
-    "lastName": "Borel",
-    "role": "admin"
-  }
+  console.log(req.body)
 
   // Check if user is exists in database
-
-  const {username, email, password, firstName, lastName, role} = req.body
-
-  User.findOne({or: [{username, email}]}, (err, user) => {
+  User.findOne({or: [{username: req.body.username, email: req.body.email}]}, (err, user) => {
     if(user) return res.status(400).json('Username or email already exists')
 
     // Generate token for new user
     
-    const token = jwt.sign({username, email, password, firstName, lastName, role}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '1hr'})
+    const token = jwt.sign({username: req.body.username, email: req.body.email, firstName: req.body.firstName, lastName: req.body.lastName, role: req.body.role}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '3hr'})
 
     // Send email with token url parameters for email confirmation and account activation
 
-    const auth = {
-      auth: {
-        api_key: process.env.MAILGUN_API_KEY,
-        domain: 'www.fabricioguardia.com'
-      }
-    }
+    const params = inviteAdministratorEmail(req.body.email, token, req.body.firstName)
 
-    const transporter = nodemailer.createTransport(mailgun(auth))
+    const sendEmailOnInvite = ses.sendEmail(params).promise()
 
-    const mailOptions = {
-      from: 'contact@fabricioguardia.com',
-      to: email,
-      subject: firstName + ' please verify your email',
-      template: 'university',
-      'v:firstname': firstName,
-      'v:clientURL': process.env.CLIENT_URL,
-      'v:token': token,
-      'v:email': email
-    }
-
-    transporter.sendMail(mailOptions, (err, data) => {
-      if(err) return res.status(400).json(err)
-      res.json(data)
+    sendEmailOnInvite
+      .then( data => {
+          console.log('Email submitted on SES', data)
+          return res.json(`Invite was sent to ${req.body.email}`)
+    })
+    .catch( err => {
+        console.log('SES email on register', err)
+        return res.status(400).json('We could not verify email address of user, please try again')
     })
     
   })
@@ -122,7 +111,6 @@ exports.adminAuth = (req, res, next) => {
 
 // FIXME: Removed Admin access code from login authentication
 exports.adminLogin = (req, res) => {
-  console.log('Hello')
   console.log(req.body)
   const {loginCred, password, code} = req.body
   User.findOne({$or: [{email: loginCred}, {username: loginCred}]}, (err, user) => {
