@@ -1,4 +1,4 @@
-exports.inviteAdministratorEmail = (email, token, firstName) => {
+exports.inviteAdministratorEmail = (email, token, firstName, password) => {
   return {
     Source: `ARCLAMS <contact@fabricioguardia.com>` ,
     Destination: { 
@@ -340,6 +340,9 @@ exports.inviteAdministratorEmail = (email, token, firstName) => {
                                           <td class="pc-fb-font" style="font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 300; line-height: 28px; letter-spacing: -0.2px; color: #151515; padding: 0 20px;" valign="top">
                                             <p>
                                               We have received a request to authorize this email address for use with ARCLAMS. Please take a minute to complete your registration by verifying your email address:</p>
+                                            <br>
+                                            <p>
+                                              Your temporary login password: <span style="font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; color: #EB9F1B; padding: 0 5px;">${password}</span></p>
                                             <br>
                                             <div style="padding: 13px 17px; border-radius: 8px; background-color: #00b7ec" valign="top" align="center">
                                             <a href="${process.env.CLIENT_URL}/auth/activate/${token}" style="line-height: 1.5; text-decoration: none; word-break: break-word; font-weight: 500; display: block; font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff;">Activate Account</a>

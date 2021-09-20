@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
 
     // Send email with token url parameters for email confirmation and account activation
 
-    const params = inviteAdministratorEmail(req.body.email, token, req.body.firstName)
+    const params = inviteAdministratorEmail(req.body.email, token, req.body.firstName, req.body.tempPassword)
 
     const sendEmailOnInvite = ses.sendEmail(params).promise()
 
@@ -53,7 +53,7 @@ exports.activate = (req, res) => {
   
   jwt.verify(req.body.token, process.env.JWT_ACCOUNT_REGISTER, (err, decoded) => {
     if(err){
-      return res.status(400).json('This url has expired please try signing up again.')
+      return res.status(400).json('This url has expired, please submit another invite request.')
     }
 
     const urlId = shortId.generate()
@@ -65,18 +65,16 @@ exports.activate = (req, res) => {
       }
 
       user.urlId = urlId
-      console.log('Hello')
-      console.log(user)
 
       const newUser = new User(user)
       newUser.save((err, result) => {
         if(err){
           console.log(err)
-          return res.status(401).json('Could not register user')
+          return res.status(401).json('Could not register user, please try again later')
         }
 
         if(result){
-          const token = jwt.sign({_id: result._id}, process.env.JWT_SECRET, {expiresIn: '1hr', algorithm: 'HS256'})
+          const token = jwt.sign({_id: result._id}, process.env.JWT_SECRET, {expiresIn: '3hr', algorithm: 'HS256'})
           const {_id, username, firstName, email, role} = result
           const userClient = {_id, username, firstName, email, role}
           return res.status(202).cookie(
