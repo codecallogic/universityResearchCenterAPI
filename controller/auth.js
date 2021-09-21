@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
 
     // Send email with token url parameters for email confirmation and account activation
 
-    const params = inviteAdministratorEmail(req.body.email, token, req.body.firstName, req.body.tempPassword)
+    const params = inviteAdministratorEmail(req.body.email, token, req.body.firstName, req.body.username, req.body.tempPassword)
 
     const sendEmailOnInvite = ses.sendEmail(params).promise()
 
@@ -100,24 +100,26 @@ exports.requiresLogin = expressJWT({ secret: process.env.JWT_SECRET, algorithms:
 exports.adminAuth = (req, res, next) => {
   const authUserId = req.user._id
   User.findOne({_id: authUserId}, (err, user) => {
-      if(err || !user) return res.status(401).json('User not found')
-
-      if(user.role !== 'admin') return res.status(401).json('Admin personnel only. Access denied')
-      
+    console.log(err)
+    if(err || !user) return res.status(401).json('User not found')
+    console.log(user)
+    if(user.role == 'admin' || user.role == 'admin_restricted'){
       req.profile = user
       next()
+    }else{
+      return res.status(401).json('Admin personnel only. Access denied')
+    }
   })
 }
 
 // FIXME: Removed Admin access code from login authentication
 exports.adminLogin = (req, res) => {
-  console.log(req.body)
+  // console.log(req.body)
   const {loginCred, password, code} = req.body
   User.findOne({$or: [{email: loginCred}, {username: loginCred}]}, (err, user) => {
     console.log(err)
       if(err || !user) return res.status(401).json('Username does not exist, please register first')
-        if(user.role === 'admin'){
-          console.log(user)
+        if(user.role === 'admin' || user.role === 'admin_restricted'){
         user.comparePassword(password, (err, isMatch) => {
           console.log(err)
           if(isMatch){
@@ -145,7 +147,7 @@ exports.adminLogin = (req, res) => {
           }
         })
         }else{
-          return res.status(401).json('Authorized personnel only')
+          return res.status(401).json('Authorized personnel only, access denied')
         }
   })
 }

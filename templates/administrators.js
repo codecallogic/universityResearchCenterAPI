@@ -1,4 +1,4 @@
-exports.inviteAdministratorEmail = (email, token, firstName, password) => {
+exports.inviteAdministratorEmail = (email, token, firstName, username, password) => {
   return {
     Source: `ARCLAMS <contact@fabricioguardia.com>` ,
     Destination: { 
@@ -341,6 +341,9 @@ exports.inviteAdministratorEmail = (email, token, firstName, password) => {
                                             <p>
                                               We have received a request to authorize this email address for use with ARCLAMS. Please take a minute to complete your registration by verifying your email address:</p>
                                             <br>
+                                            <p>
+                                              Your temporary username: <span style="font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; color: #EB9F1B; padding: 0 5px;">${username}</span>
+                                            </p>
                                             <p>
                                               Your temporary login password: <span style="font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; color: #EB9F1B; padding: 0 5px;">${password}</span></p>
                                             <br>
