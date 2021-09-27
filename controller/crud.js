@@ -490,8 +490,6 @@ exports.createStudentProfile = (req, res) => {
 
 exports.updateStudentProfile = async (req, res) => {
   upload(req, res, async function (err) {
-    console.log(req.body)
-    console.log(req.file)
     let photo = req.file ? req.file.filename : req.body.photo
     let tags = req.body.researchInterests.split(',')
     let tagsToRemove = req.body.tagsToRemove ? req.body.tagsToRemove.split(',') : null
@@ -522,9 +520,9 @@ exports.updateStudentProfile = async (req, res) => {
     })
     
     Tags.create(json, (err, item) => {
-      console.log(err._message)
+      console.log(err)
       if(err) {
-        if(err._message) return err._message == 'Tags validation failed' ? true : null
+        // if(err._message) return err._message == 'Tags validation failed' ? null : null
         if(!err._message) return res.status(400).json( err.code == 11000 ? 'Could not save duplicate tags' : 'There was an error saving a tag')
       }
 
