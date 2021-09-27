@@ -22,7 +22,7 @@ const ses = new aws.SES({ apiVersion: '2010-12-01'})
 exports.register = async (req, res) => {
   // Check if user is exists in database
   User.findOne({or: [{username: req.body.username, email: req.body.email}]}, (err, user) => {
-    console.log(user)
+    // console.log(user)
     if(user) return res.status(400).json('Username or email already exists')
 
     // Generate token for new user
@@ -102,7 +102,7 @@ exports.adminAuth = (req, res, next) => {
   User.findOne({_id: authUserId}, (err, user) => {
     console.log(err)
     if(err || !user) return res.status(401).json('User not found')
-    console.log(user)
+    // console.log(user)
     if(user.role == 'admin' || user.role == 'admin_restricted'){
       req.profile = user
       next()
@@ -156,4 +156,29 @@ exports.adminLogout = (req, res) => {
   res.clearCookie('user')
   res.clearCookie('accessToken')
   return res.json('Logged out');
+}
+
+exports.getUsers = (req, res) => {
+  if(req.profile.role == 'admin'){
+    User.find({}, (err, users) => {
+      if(err) return res.status(401).json('There was error loading admin users')
+      return res.json(users)
+    })
+  }
+  if(req.profile.role == 'admin_restricted'){
+    User.find({role: 'admin_restricted'}, (err, users) => {
+      if(err) return res.status(401).json('There was error loading admin users')
+      return res.json(users)
+    })
+  }
+}
+
+exports.adminDelete = (req, res) => {
+  User.findByIdAndDelete(req.body[0], (err, response) => {
+    if(err) res.status(400).json('Error deleting the administrator')
+    User.find({}, (err, results) => {
+      if(err) return res.status(401).json('Could not get admin users')
+      res.json(results)
+    })
+  })
 }
