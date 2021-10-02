@@ -118,37 +118,37 @@ exports.adminLogin = (req, res) => {
   const {loginCred, password, code} = req.body
   User.findOne({$or: [{email: loginCred}, {username: loginCred}]}, (err, user) => {
     console.log(err)
-      if(err || !user) return res.status(401).json('Username does not exist, please register first')
-        if(user.role === 'admin' || user.role === 'admin_restricted'){
-        user.comparePassword(password, (err, isMatch) => {
-          console.log(err)
-          if(isMatch){
-            const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
-            const {_id, username, email, role} = user
-            const userClient = {_id, username, email, role}
-            return res.status(202).cookie(
-                "accessToken", token, {
-                sameSite: 'strict',
-                expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
-                httpOnly: true,
-                secure: false,
-                overwrite: true
-            })
-            .cookie("user", JSON.stringify(userClient), {
+    if(err || !user) return res.status(401).json('Username does not exist, please register first')
+      if(user.role === 'admin' || user.role === 'admin_restricted'){
+      user.comparePassword(password, (err, isMatch) => {
+        console.log(err)
+        if(isMatch){
+          const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
+          const {_id, username, email, role} = user
+          const userClient = {_id, username, email, role}
+          return res.status(202).cookie(
+              "accessToken", token, {
               sameSite: 'strict',
               expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
               httpOnly: true,
               secure: false,
               overwrite: true
-            })
-            .send('User is logged in')
-          }else{
-            return res.status(401).json('Email and password do not match')
-          }
-        })
+          })
+          .cookie("user", JSON.stringify(userClient), {
+            sameSite: 'strict',
+            expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
+            httpOnly: true,
+            secure: false,
+            overwrite: true
+          })
+          .send('User is logged in')
         }else{
-          return res.status(401).json('Authorized personnel only, access denied')
+          return res.status(401).json('Email and password do not match')
         }
+      })
+      }else{
+        return res.status(401).json('Authorized personnel only, access denied')
+      }
   })
 }
 
