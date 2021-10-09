@@ -12,6 +12,7 @@ const app = express()
 const authRoutes = require('./routes/auth')
 const userRoutes = require('./routes/user')
 const crudRoutes = require('./routes/crud')
+const menuRoutes = require('./routes/menu')
 
 // MIDDLEWARE
 app.use(morgan('dev'));
@@ -35,6 +36,8 @@ app.use('/api', userRoutes, (err, req, res, next) => {
     res.status(401).json('Please refresh the page, and login first.');
   }
  })
+
+ app.use('/api/menu', menuRoutes)
 
 const port = process.env.PORT || 3001
 
