@@ -1,7 +1,8 @@
 const NavItem = require('../models/nav-item')
+const NavMenu = require('../models/nav-menu')
 
 exports.createNavItem = (req, res) => {
-  NavItem.findOne({name: req.body.name}, (err, navItem) => {
+  NavItem.findOne({name: {$regex: req.body.name, $options: 'i'}}, (err, navItem) => {
     if(navItem) return res.status(401).json('Could not have items with same name')
 
     const newItem = new NavItem(req.body)
@@ -40,5 +41,27 @@ exports.deleteNavItem = (req, res) => {
       if(err) return res.status(401).json('Error ocurred returning items')
       return res.json(items)
     })
+  })
+}
+
+exports.createNavMenu = (req, res) => {
+  NavMenu.findOne({name: {$regex: req.body.name, $options: 'i'}}, (err, navMenu) => {
+    console.log(err)
+    if(navMenu) return res.status(401).json('Could not have a nav menu with same name')
+
+    const newNavMenu = new NavMenu(req.body)
+
+    newNavMenu.save((err, menu) => {
+      console.log(err)
+      if(err) return res.status(401).json('Error occured saving the nave menu')
+      return res.json(`Create nav menu ${menu.name}`)
+    })
+  })
+}
+
+exports.getNavMenus = (req, res) => {
+  NavMenu.find({}).populate('item').exec((err, menus) => {
+    if(err) return res.status(401).json('Error occurred could not get nav menus')
+    return res.json(menus)
   })
 }
