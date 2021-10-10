@@ -65,3 +65,20 @@ exports.getNavMenus = (req, res) => {
     return res.json(menus)
   })
 }
+
+exports.updateNavMenu = (req, res) => {
+  let updatedItems = []
+  req.body.item.filter((item) => {
+    updatedItems.push(item._id)
+  })
+  
+  req.body.item = updatedItems
+  
+  NavMenu.findByIdAndUpdate(req.body._id, req.body, (err, updatedMenu) => {
+    if(err) return res.statsu(401).json('Error ocurred updating the nav menu')
+    NavMenu.find({}).populate('item').exec((err, items) => {
+      if(err) return res.status(401).json('Error ocurred returning items')
+      return res.json(items)
+    })
+  })
+}
