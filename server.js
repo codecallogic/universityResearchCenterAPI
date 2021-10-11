@@ -32,7 +32,7 @@ app.use('/api', userRoutes, (err, req, res, next) => {
  
  app.use('/api', crudRoutes, (err, req, res, next) => {
   if (err.name === 'UnauthorizedError') {
-    console.log(err)
+    // console.log(err)
     res.status(401).json('Please refresh the page, and login first.');
   }
  })

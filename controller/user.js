@@ -13,7 +13,6 @@ aws.config.update({
 const ses = new aws.SES({ apiVersion: '2010-12-01'})
 
 exports.read = (req, res) => {
-  console.log(req)
   User.findOne({_id: req.user._id}, (err, user) => {
     console.log(err)
     if(err) return res.status(401).json('User not found')

@@ -34,12 +34,20 @@ exports.updateNavItem = (req, res) => {
 }
 
 exports.deleteNavItem = (req, res) => {
-  console.log(req.body)
+  // console.log(req.body)
   NavItem.findByIdAndDelete(req.body[0], (err, response) => {
     if(err) return res.status(401).json('Error ocurred deleting nav item')
-    NavItem.find({}, (err, items) => {
-      if(err) return res.status(401).json('Error ocurred returning items')
-      return res.json(items)
+    console.log(response)
+
+    NavMenu.updateMany({ "item" : { $in : [req.body[0]] }}, { $pullAll : {"item" : [req.body[0]] }} , (err, response) => {
+
+      console.log(err)
+      if(err) res.status(401).json('Error ocurred removing nav item from parents menus')
+
+      NavItem.find({}, (err, items) => {
+        if(err) return res.status(401).json('Error ocurred returning items')
+        return res.json(items)
+      })
     })
   })
 }
