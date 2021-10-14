@@ -6,8 +6,11 @@ const HeaderComponent = require('../models/header')
 const StudentProfile = require('../models/student-profile')
 const Tags = require('../models/tags')
 const Webpage = require('../models/webpage')
+const {inviteStudentEmail} = require('../templates/students')
 const multer = require('multer')
 const path  = require('path')
+const aws = require('aws-sdk')
+const jwt = require('jsonwebtoken')
 
 let storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -16,6 +19,12 @@ let storage = multer.diskStorage({
   filename: function (req, file, cb) {
     cb(null, file.originalname)
   }
+})
+
+aws.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
 })
 
 let storageHeader = multer.diskStorage({
@@ -29,6 +38,7 @@ let storageHeader = multer.diskStorage({
 
 let upload = multer({ storage: storage }).single('file')
 let headerUpload = multer({ storage: storageHeader }).fields([{name: 'imageLeftColumn'}, {name: 'imageRightColumn'}])
+const ses = new aws.SES({ apiVersion: '2010-12-01'})
 
 
 // ANNOUNCEMENTS
@@ -122,7 +132,6 @@ exports.updateAnnouncement = (req, res) => {
         res.json(results)
       })
     })
-
   })
 }
 
@@ -418,7 +427,7 @@ exports.headerComponentPublic = (req, res) => {
 // STUDENT PROFILES
 exports.createStudentProfile = (req, res) => {
   upload(req, res, async function (err) {
-    let photo = req.file ? req.file.filename : null
+      let photo = req.file ? req.file.filename : null
     // console.log(req.file)
     // console.log(req.body)
 
@@ -450,7 +459,7 @@ exports.createStudentProfile = (req, res) => {
       return {"tag": i}
     })
 
-    console.log(json)
+    // console.log(json)
 
     Tags.create(json, (err, item) => {
     // console.log(err._message)
@@ -480,7 +489,22 @@ exports.createStudentProfile = (req, res) => {
           newStudent.save( (err, results) => {
             console.log(results)
             if(err) return res.status(401).json(`Sorry we're having trouble creating the student`)
-            res.json('Student profile was created successfully')
+            
+            const token = jwt.sign({username: req.body.username, email: req.body.email, firstName: req.body.firstName, password: req.body.password,lastName: req.body.lastName}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '24hr'})
+
+            const params = inviteStudentEmail(req.body.email, token, req.body.firstName, req.body.username, req.body.password)
+
+            const sendEmailOnInvite = ses.sendEmail(params).promise()
+
+            sendEmailOnInvite
+              .then( data => {
+                  console.log('Email submitted on SES', data)
+                  return res.json(`Student created. Invite was sent to ${req.body.email}`)
+            })
+            .catch( err => {
+                console.log(err)
+                return res.status(400).json('We could not verify email address of user, please try again')
+            })
           })
         })
       })

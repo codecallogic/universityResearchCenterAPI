@@ -6,7 +6,6 @@ const Tags = new Schema(
   tag: {
     type: String,
     unique: true,
-    required: true
   }
 },
 {

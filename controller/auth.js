@@ -1,4 +1,5 @@
 const User = require('../models/auth')
+const Student = require('../models/student-profile')
 const jwt = require('jsonwebtoken')
 const axios = require('axios')
 const shortId = require('shortid')
@@ -179,6 +180,48 @@ exports.adminDelete = (req, res) => {
     User.find({}, (err, results) => {
       if(err) return res.status(401).json('Could not get admin users')
       res.json(results)
+    })
+  })
+}
+
+exports.activateStudent = (req, res) => {
+  const user = jwt.decode(req.body.token)
+  // console.log(user)
+  jwt.verify(req.body.token, process.env.JWT_ACCOUNT_REGISTER, (err, decoded) => {
+    if(err){
+      console.log(err)
+      return res.status(400).json('This url has expired, please submit another invite request.')
+    }
+
+    const urlId = shortId.generate()
+    
+    Student.findOne({$or: [{email: user.email}, {username: user.username}]}, (err, found) => {
+      if(err){
+        console.log(err)
+        return res.status(401).json('Error occurred account was not registered by an admin.')
+      }
+
+      found.urlId = urlId
+      found.activate = true
+
+      Student.findByIdAndUpdate(found._id, found, {new: true}, (err, updatedStudent) => {
+        if(err) return res.status(401).json('Error occurred activating you account, please contact our support team')
+          const token = jwt.sign({_id: updatedStudent._id}, process.env.JWT_SECRET, {expiresIn: '3hr', algorithm: 'HS256'})
+          const {_id, username, firstName, email} = updatedStudent
+          const studentClient = {_id, username, firstName, email}
+          return res.status(202).cookie(
+              "studentAccessToken", token, {
+              sameSite: 'strict',
+              expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
+              httpOnly: true
+          })
+          .cookie("student", JSON.stringify(studentClient), {
+            sameSite: 'strict',
+            expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
+            httpOnly: true
+          })
+          .send('Student is activated')
+      })
     })
   })
 }
