@@ -429,7 +429,7 @@ exports.createStudentProfile = (req, res) => {
   upload(req, res, async function (err) {
       let photo = req.file ? req.file.filename : null
     // console.log(req.file)
-    // console.log(req.body)
+    console.log(req.body)
 
     if (err instanceof multer.MulterError) {
       return res.status(500).json(err)
@@ -487,8 +487,9 @@ exports.createStudentProfile = (req, res) => {
           const newStudent = new StudentProfile(req.body)
 
           newStudent.save( (err, results) => {
-            console.log(results)
+            console.log(err)
             if(err) return res.status(401).json(`Sorry we're having trouble creating the student`)
+            console.log(results)
             
             const token = jwt.sign({username: req.body.username, email: req.body.email, firstName: req.body.firstName, password: req.body.password,lastName: req.body.lastName}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '24hr'})
 

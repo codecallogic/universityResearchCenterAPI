@@ -29,22 +29,18 @@ const studentProfileSchema = new Schema(
   },
   linkedIn: {
     type: String,
-    required: true
   },
   researchInterests: [{
     type: Schema.Types.ObjectId, ref: 'Tags'
   }],
   institution: {
     type: String,
-    required: true
   },
   department: {
     type: String,
-    required: true
   },
   areaOfStudy: {
     type: String,
-    required: true
   },
   email: {
     type: String,
@@ -52,23 +48,18 @@ const studentProfileSchema = new Schema(
   },
   activity: {
     type: String,
-    required: true
   },
   biography: {
     type: String,
-    required: true
   },
   education: {
     type: String,
-    required: true
   },
   research: {
     type: String,
-    required: true
   },
   publication: {
     type: String,
-    required: true
   },
   enabled: {
     type: Boolean,

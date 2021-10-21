@@ -225,3 +225,58 @@ exports.activateStudent = (req, res) => {
     })
   })
 }
+
+// STUDENT CRUD
+exports.studentLogin = (req, res) => {
+  Student.findOne({$or: [{username: req.body.username}, {email: req.body.username}]}, (err, student) => {
+    console.log(err)
+    if(err || !student) return res.status(401).json('Username does not exist, please register first')
+      if(student.activate){
+      student.comparePassword(req.body.password, (err, isMatch) => {
+        console.log(err)
+        if(isMatch){
+          const token = jwt.sign({_id: student._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
+          const {_id, username, email, activate} = student
+          const studentClient = {_id, username, email, activate}
+          return res.status(202).cookie(
+              "studentAccessToken", token, {
+              sameSite: 'strict',
+              expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
+              httpOnly: true,
+              secure: false,
+              overwrite: true
+          })
+          .cookie("student", JSON.stringify(studentClient), {
+            sameSite: 'strict',
+            expires: new Date(new Date().getTime() + (60 * 60 * 1000)),
+            httpOnly: true,
+            secure: false,
+            overwrite: true
+          })
+          .send('Student is logged in')
+        }else{
+          return res.status(401).json('Email and password do not match')
+        }
+      })
+      }else{
+        return res.status(401).json('Student account is not activated, please activate from link email received.')
+      }
+  })
+}
+
+exports.requiresStudentLogin = expressJWT({ secret: process.env.JWT_SECRET, algorithms: ['HS256']})
+
+exports.studentAuth = (req, res, next) => {
+  const authUserId = req.user._id
+  Student.findOne({_id: authUserId}, (err, user) => {
+    console.log(err)
+    if(err || !user) return res.status(401).json('Student not found')
+    // console.log(user)
+    if(user.activate){
+      req.profile = user
+      next()
+    }else{
+      return res.status(401).json('Student account is not activate.')
+    }
+  })
+}

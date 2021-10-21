@@ -1,4 +1,5 @@
 const User = require('../models/auth')
+const Student = require('../models/student-profile')
 const jwt = require('jsonwebtoken')
 const aws = require('aws-sdk')
 const {resetPasswordEmail} = require('../templates/resetPassword')
@@ -106,5 +107,22 @@ exports.updateEmail = (req, res) => {
       if(err) return res.status(401).json('There was an error updating your email')
       return res.json(`Your email has changed to ${req.body.user.email}`)
     })
+  })
+}
+
+// STUDENT CRUD
+exports.readStudent = (req, res) => {
+  Student.findOne({_id: req.user._id}, (err, user) => {
+    console.log(err)
+    if(err) return res.status(401).json('Student not found')
+    res.json('Logged in')
+  })
+}
+
+exports.studentInfo = (req, res) => {
+  console.log(req.body)
+  Student.findById(req.body.user._id, (err, user) => {
+    if(err) return res.status(401).json('Student not found')
+    return res.json({firstName: user.firstName, lastName: user.lastName, username: user.username, email: user.email})
   })
 }
