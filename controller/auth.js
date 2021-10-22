@@ -232,12 +232,14 @@ exports.studentLogin = (req, res) => {
     console.log(err)
     if(err || !student) return res.status(401).json('Username does not exist, please register first')
       if(student.activate){
-      student.comparePassword(req.body.password, (err, isMatch) => {
-        console.log(err)
+      student.comparePassword(req.body.password, (errPass, isMatch) => {
+        console.log(errPass)
+        console.log(isMatch)
+        // lA7,t=2I<9Ej{2Yp
         if(isMatch){
           const token = jwt.sign({_id: student._id}, process.env.JWT_SECRET, {expiresIn: '60min', algorithm: 'HS256'})
-          const {_id, username, email, activate} = student
-          const studentClient = {_id, username, email, activate}
+          const {_id, username, email} = student
+          const studentClient = {_id, username, email}
           return res.status(202).cookie(
               "studentAccessToken", token, {
               sameSite: 'strict',

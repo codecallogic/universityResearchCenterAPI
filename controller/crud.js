@@ -492,7 +492,7 @@ exports.createStudentProfile = (req, res) => {
             console.log(results)
             
             const token = jwt.sign({username: req.body.username, email: req.body.email, firstName: req.body.firstName, password: req.body.password,lastName: req.body.lastName}, process.env.JWT_ACCOUNT_REGISTER, {expiresIn: '24hr'})
-
+            console.log(req.body.password)
             const params = inviteStudentEmail(req.body.email, token, req.body.firstName, req.body.username, req.body.password)
 
             const sendEmailOnInvite = ses.sendEmail(params).promise()

@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const aws = require('aws-sdk')
 const {resetPasswordEmail} = require('../templates/resetPassword')
 const {changeEmailTemplate} = require('../templates/changeEmail')
+const {studentChangePassword} = require('../templates/studentChangePassword')
 
 aws.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -120,9 +121,26 @@ exports.readStudent = (req, res) => {
 }
 
 exports.studentInfo = (req, res) => {
-  console.log(req.body)
   Student.findById(req.body.user._id, (err, user) => {
     if(err) return res.status(401).json('Student not found')
-    return res.json({firstName: user.firstName, lastName: user.lastName, username: user.username, email: user.email})
+    return res.json(user)
+  })
+}
+
+exports.studentChangePasswordEmail = (req, res) => {
+  const token = jwt.sign({username: req.body.user.username, email: req.body.user.email, id: req.body.user._id}, process.env.JWT_RESET_PASSWORD, {expiresIn: '24hr'})
+  
+  const params = studentChangePassword(req.body.email, token)
+
+  const sendEmailOnInvite = ses.sendEmail(params).promise()
+
+  sendEmailOnInvite
+    .then( data => {
+        console.log('Email submitted on SES', data)
+        return res.json(`Reset password link was sent to ${req.body.email}`)
+  })
+  .catch( err => {
+      console.log('SES email on register', err)
+      return res.status(400).json('We could not verify email address of user, please try again')
   })
 }

@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const {read, userInfo, updateUserInfo, userResetPasswordEmail, userChangePassword, userChangeEmail, updateEmail, readStudent, studentInfo} = require('../controller/user')
+const {read, userInfo, updateUserInfo, userResetPasswordEmail, userChangePassword, userChangeEmail, updateEmail, readStudent, studentInfo, studentChangePasswordEmail} = require('../controller/user')
 const {passwordValidator} = require('../validators/auth')
 const {runValidation} = require('../validators')
 
@@ -19,5 +19,6 @@ router.post('/user-update-email', updateEmail)
 // STUDENT ROUTES
 router.get('/student', requiresStudentLogin, studentAuth, readStudent)
 router.post('/student-user-info', studentInfo)
+router.post('/student-change-password-email', studentChangePasswordEmail)
 
 module.exports  = router
