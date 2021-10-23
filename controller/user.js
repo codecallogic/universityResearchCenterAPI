@@ -144,3 +144,22 @@ exports.studentChangePasswordEmail = (req, res) => {
       return res.status(400).json('We could not verify email address of user, please try again')
   })
 }
+
+exports.studentChangePassword = (req, res) => {
+  jwt.verify(req.body.token, process.env.JWT_RESET_PASSWORD, (err, decoded) => {
+  if(err) return res.status(400).json('This url has expired, please submit another request.')
+    Student.findById(req.body.user.id, (err, user) => {
+      console.log(err)
+      if(err) return res.status(401).json('User does not exits, please register first')
+      // if(isMatch){
+        user.password = req.body.password
+        user.save((err, updatedUser) => {
+          if(err) return res.status(401).json('There was error updating your password, please try again later')
+          res.clearCookie('student')
+          res.clearCookie('studentAccessToken')
+          return res.json(`Password has changed, please login with new password`)
+        })
+      // }
+    })
+  })
+}

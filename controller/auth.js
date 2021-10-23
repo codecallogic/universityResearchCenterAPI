@@ -282,3 +282,9 @@ exports.studentAuth = (req, res, next) => {
     }
   })
 }
+
+exports.studentLogout = (rew, res) => {
+  res.clearCookie('student')
+  res.clearCookie('studentAccessToken')
+  res.json('Student logged out')
+}
