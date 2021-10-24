@@ -515,6 +515,8 @@ exports.createStudentProfile = (req, res) => {
 
 exports.updateStudentProfile = async (req, res) => {
   upload(req, res, async function (err) {
+    console.log(req.body)
+    console.log(req.file)
     let photo = req.file ? req.file.filename : req.body.photo
     let tags = req.body.researchInterests.split(',')
     let tagsToRemove = req.body.tagsToRemove ? req.body.tagsToRemove.split(',') : null
